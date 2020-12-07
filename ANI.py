@@ -248,6 +248,7 @@ class ANIbot(ANI_base_bot):
         self.mine_controller = MineController(self)
         self.unit_trainer = UnitTrainer(self)
         self.can_do_worker_rush_defence = True
+        self.kill_scout = True
         self.cached_we_should_expand = None
         self.step_timer = 0
         self.attack_route_a = []
@@ -1356,7 +1357,7 @@ class ANIbot(ANI_base_bot):
             14 = MCV
             15 = cc first
             """
-            # self.strategy = 5  # 2020
+            self.strategy = 13  # 2020
             # self.strategy = random.choice([13])
             # self.strategy = random.randint(1, 15)
 
@@ -3656,6 +3657,18 @@ class ANIbot(ANI_base_bot):
                 return
             else:
                 self.proxy_defence = False
+
+        if self.kill_scout and self.time < 180:
+            enemy_scouts = self.enemy_units.of_type([UnitTypeId.DRONE, UnitTypeId.SCV, UnitTypeId.PROBE])\
+                .closer_than(20, self.start_location)
+            if enemy_scouts and scvs:
+                if self.chat:
+                    await self._client.chat_send("Enemy scout detected.", team_only=False)
+                    print("Enemy scout detected.")
+                scout = enemy_scouts.first
+                scv = scvs.filter(lambda x: not x.is_puuhapete).closest_to(self.start_location)
+                self.do(scv.attack(scout))
+                self.kill_scout = False
 
         if targets and scvs and self.can_do_worker_rush_defence:
             mf = self.mineral_field.closest_to(self.homeBase)
