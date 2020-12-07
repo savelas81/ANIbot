@@ -1,17 +1,15 @@
-# sharpy-starter-bot
-Starter bot using  [sharpy-sc2](https://github.com/DrInfy/sharpy-sc2/wiki) and [python-sc2](https://github.com/BurnySc2/python-sc2) for playing [Starcraft 2](https://starcraft2.com/en-us/) using [sc2 api](https://github.com/Blizzard/s2client-api).
+Hello
 
-## To download
-`git clone --recursive https://github.com/DrInfy/sharpy-starter-bot`
+I'm Now Sharpy Artificial No Intelligence. Thank You. Shortly insANIty. Friends call me ANI.
 
-## To run the bot vs ingame ai
-`python run_custom.py -m EverDreamLE -p1 protossbot -p2 ai`
+ANI is one man project to learn programming basics. Now ANI can use all units availble for terran.
 
-## To publish the bot for ladder
-`python ladder_zip.py`
+Machine learning is used at its simplest form. Bot uses same strategy again if it achieved victory in previous game agains same bot. Hopefully this can be extended futher and more complex in future.
 
-## To get coding assistance in PyCharm
-Mark sharpy-sc2 and sharpy-sc2/python directories as source roots.
+At this moment 15 differen strategies are used. Ani has only few options to change it behavior during game. ANI does use now scouting information from first scv scout.
 
-## Documentation 
-Refer to [sharpy documentation](https://github.com/DrInfy/sharpy-sc2/wiki) for features
+Ani uses SC2_bot_chat add on to catch enemy chat messages and replies to them.
+
+ANI qualified in Probots tournaments 2020 season 2&3. Before that i has been in Probots few times when qualification was not needed.
+
+I want to thank all great people in Starcraft_2_AI and Ai_Arena discords to make this one man dream come true.
