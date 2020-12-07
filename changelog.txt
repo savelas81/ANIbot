@@ -1,0 +1,96 @@
+6.10.2019 ANIbot submitter to probots with vesion "30.9.2019"
+6.10.2019 When walling can now ANI make one defensive tank and sige it.
+8.10.2019 Incresed scv production on bio strategy.
+8.10.2019 Changed logic against worker rush.
+9.10.2019 Prohibited scv defence during wall_in (when wall is ready)
+9.10.2019 improved logic for worker rushes
+10.10.2019 Refactored abandon mainbase strategy
+11.10.2019 fixed bug in new abandon mainbase strategy
+12.20.2019 removed "ALL_IN bug" that came with new worker rush counter code
+12.10.2019 More accurate targetting (lowest health unit in range) fot marines, marauders and ghosts
+12.10.2019 Made improvements scv mineral and gas gathering algoritm (also simplified it a little bit)
+13.10.2019 Improved mech trategy build order
+13.10.2019 ANI makes few marines faster if it makes bunker. Helps with rushes.
+14.10.2019 Rewrote marinedrop stratey. send now dual marine drop before 5 min mark insted of one.
+17.10.2019 Added more hellbats in biobuild and created "scout" roup to check next expansion
+17.10.2019 Changed low gas start strategy to greedy marine / BC strategy.
+18.10.2019 Changed abandon base strategy to testing ground for new strategies.
+18.10.2019 Made changes to bio strategy build order.
+18.10.2019 Fixed bug if need to expand and under attack production would stop.
+19.10.2019 Bug fixes. A lot. Not going to write all. :)
+20.10.2019 ANIbot submitted to probots with version "20.9.2019"
+21.10.2019 Rewrote terran bio strategy
+21.10.2019 Fixed bug regarding add_on swap. factory did not fing techlab and made pushups in random locations.
+22.10.2019 Fixed bug in greed strategy buid order.
+27.10.2019 Added creep detection to next expansion to make sure that cc can be placed.
+27.10.2019 Production facilities still make pushups! FIX ME! (should be ok now 2.11.2019)
+27.10.2019 building placement is not totally random anymore.
+31.10.2019 Build liberators with range upgrade after winning air battle. (air supriority and marinedrop tactics)
+2.11.2019 Small changes in build orders etc. Terran bio is more bio now.
+3.11.2019 Supplydepot placement redesigned.
+7.11.2019 New Minefields strategy implemented, and tested in aiarena.
+24.11.2019 Lot of small bug fixes.
+25.11.2019 Mines are now on scvs repair list.
+10.2.2020 Better worker rush defence
+11.2.2020 Greed strategy modified to more greedy.
+13.2.2020 Added more hellbats to mech build. Does not cumulate too much minerals anymore.
+13.2.2020 Greed strategy modified to even more greedy.
+14.2.2020 Small changes in bio strategy
+14.2.2020 Fixed bug where banshees ran away from groung units that can't shoot air.
+15.2.2020 Modified "fast cyclones" stratey to counter BCMACHINE
+16.2.2020 worker rush counter strategy is modified.
+10.5.2020 Lot of changes during last week. Including new code for terran bio strategy.
+12.5.2020 New micro for marines. Bugs fixed in medivac misro.
+	Now supplydepots will lower to even if enemies are visible. Bot was not able to take first expansion.
+	bug: Scv:s do not return to harvesting after they boys are pulled. FIX: Now they return when enemy is defeated
+	Added primitive cannon rush defence.
+	Marines stim only if more than 2 enemies close.
+	Marine micro against [ZERGLING, BANELING, ZEALOT, ARCHON] modified
+	Modified supplydepot micro. (that souded funny)
+13.5.2020 Reaper opening was replaced with 2 base push
+14.5.2020 Lot of changes. Viking, thor, siegetank micros and mech build strategy redone.
+15.5.2020 ANI makes now liberators or vikings depending what enemy has.
+	Scanner delay added. does not use all energy at once. 
+	Starts saving CC energy if cloaked units. Limit for mules increases 60 -> 100
+	Fixed bug when bot crashed after losing last cc.
+	If viking production is delayed and enemy air units detected then starport queues are cleared and vikings produces instead.
+		Also produces one extra starport.
+	Viking micro redone. Should stay alive little bit longer and inflict more damage.
+	worker rush defence modified. Does not produce scv:s during rush.
+26.5.2020 Super Greed menee pois päältä, mikäli proxy barracks on spotattu.
+	Proxy voidaan scoutata nyt vain kerran.
+30.5.2020 Too many changes to write all down...
+15.6.2020 Modified Ghost strategy to use hellions and hellbats as mineral dump
+16.6.2020 Chanced step size back to 4
+17.6.2020 Fixed a bug that did send scv and not reaper to do the harass.
+	Bug: reaper does not haras, but protects home.
+23.6.2020 If ling rush is deected minimum 6 hellion is produced.
+18.7.2020 Strategies and some bug fixes for probots.
+19.8.2020 New test strategy created.
+	cyclone micro modified for main base defence
+	Forces to build one tank to defend main base.
+	Has option for third expansion immediately after natural completed
+	if tempests detected in new strategy build 8 vikings to support cyclones
+20.8.2020 Scans new expansion location if marines are patrolling that area when expanding.
+31.8.2020 during worker rush scv:s start repairing earlier 1/3hp -> 1/2hp
+	Agressive mode for scv:s activated when minerals below 100 instead of 50.
+9.9.2020 Marines will not hunt cloaked enemies when protecting siegetank.
+	Prevent 4th cc construction in greedy start at start.
+	Limit scv production in greedy strat until 3 cc under construction.
+	in test star precent third expansion if under attack.
+	Will try to stay in 1 base longer if under cannon rush.
+	Does not activate panic scv defence for enemy structures.
+22.9.2020 MapAnalyzer installed
+	Memory for enemy unit made
+	Chat bot prototype made
+	Fixed bug in "greedy_third" code.
+	Added reaction for enemy stargate
+6.11.2020 Build order optimization, bug fixes and strat selection for probots.
+22.11.2020 Update inspider by Spiny. Greedy expand to 2-base push.
+22.11.2020 New banshee logic
+27.11.2020 Reaction for marine all-in improved
+	Force helllion production from factory if zerglings harassing in early game
+	Added meat shield (scv) for marine if harassed by zealots
+28.11.2020 Build order improvements
+	Strategies chosen for Probots
+29.11.2020 Higher priority for vikings if tempests are spotted.
