@@ -496,11 +496,12 @@ class ANI_base_bot(SkeletonBot):
             if townhall_out_of_jobs.assigned_harvesters > (townhall_out_of_jobs.ideal_harvesters):
                 for townhall_jobs_available in townhalls:
                     if townhall_jobs_available.assigned_harvesters < townhall_jobs_available.ideal_harvesters:
-                        scvs_carrying_minerals = scvs.filter(lambda x: x.is_carrying_minerals).closer_than(15,
-                                                                                                           townhall_out_of_jobs)
-                        if scvs_carrying_minerals:
-                            scv_to_transfer = random.choice(scvs_carrying_minerals)
-                            self.do(scv_to_transfer.move(townhall_jobs_available.position))
+                        free_scvs = scvs.filter(
+                            lambda x: not x.is_carrying_minerals and not x.is_carrying_vespene)\
+                            .closer_than(10, townhall_out_of_jobs)
+                        if free_scvs:
+                            scv = random.choice(free_scvs)
+                            self.do(scv.move(scv.position))
                             return
 
     def remember_repair_group(self):
