@@ -437,7 +437,7 @@ class ANI_base_bot(SkeletonBot):
         for refinery in self.gas_buildings:
             if self.enemy_units.closer_than(10, refinery):
                 continue
-            if (self.vespene > self.minerals + 500 and not idle_workers and refinery.assigned_harvesters > 1) \
+            if (self.vespene > self.minerals + 400 and not idle_workers and refinery.assigned_harvesters > 1) \
                     or refinery.assigned_harvesters > 3:
                 for scv in scvs.filter(lambda x: x.is_carrying_vespene).closer_than(5, refinery):
                     target = scv.position.towards(self.game_info.map_center, 1)
