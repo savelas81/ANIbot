@@ -642,24 +642,6 @@ class ANIbot(ANI_base_bot):
                         self.build_cc_home = True
                         self.refineries_in_first_base = 2
 
-                if self.proxy_structures:
-                    self.scout_sent = False
-                    self.proxy_defence = True
-                    self.can_do_worker_rush_defence = False
-                    self.minimum_repairgroup = 2
-                    for building in self.structures.closer_than(5, self.natural):
-                        if await self.has_ability(AbilityId.CANCEL_BUILDINPROGRESS, building):
-                            self.do(building(AbilityId.CANCEL_BUILDINPROGRESS))
-                    # self.first_base_saturation = 0
-                    # self.refineries_in_first_base = 2
-                    # self.build_cc_home = True
-                    # self.priority_tank = True
-                    # self.delay_expansion = True
-                    # for scv in self.scvs:
-                    #     self.do(scv.attack(self.enemy_structures.random))
-                    if self.chat:
-                        await self._client.chat_send("Proxy build detected -> Panic!", team_only=False)
-
         if self.enemy_structures.of_type(UnitTypeId.BUNKER).amount > 1 and self.delay_third:
             self.delay_third = False
             self.scv_build_speed = 3
@@ -1357,7 +1339,7 @@ class ANIbot(ANI_base_bot):
             14 = MCV
             15 = cc first
             """
-            self.strategy = 13  # 2020
+            # self.strategy = 13  # 2020
             # self.strategy = random.choice([13])
             # self.strategy = random.randint(1, 15)
 
@@ -1666,10 +1648,11 @@ class ANIbot(ANI_base_bot):
                 self.liberator_left = 0
                 self.maxmedivacs = 0
                 self.banshee_left = 20
+                self.dual_liberator = True
                 self.cyclone_left = 2
                 self.upgrade_banshee_cloak = True  # researsh banshee cloak and hyper rotors. delays  banshee production
                 self.upgrade_banshee_speed = True  # researsh banshee cloak and hyper rotors. delays  banshee production
-                self.upgrade_liberator = False
+                self.upgrade_liberator = True
                 self.max_starports = 4
                 self.max_BC = 6
                 self.raven_left = 0
@@ -2275,7 +2258,7 @@ class ANIbot(ANI_base_bot):
 
         if self.iteraatio == 25 and self.chat:
             # await self._client.chat_send("InsANIty. Friends call me ANI. 3.12.2020", team_only=False)
-            await self._client.chat_send("ANI 6.12.2020. GLHF.", team_only=False)
+            await self._client.chat_send("ANI 11.12.2020. GLHF.", team_only=False)
         if self.iteraatio == 50:
             if self.strategy == 1:
                 if self.chat:
@@ -3623,6 +3606,19 @@ class ANIbot(ANI_base_bot):
                     avoiding_liberators = True
             if avoiding_liberators:
                 return
+
+        if self.proxy_structures and not self.barracks.ready \
+                and not self.factories and not self.starports and self.muster_home_defence:
+            self.scout_sent = False
+            self.proxy_defence = True
+            self.can_do_worker_rush_defence = False
+            self.minimum_repairgroup = 2
+            for building in self.structures.closer_than(5, self.natural):
+                if await self.has_ability(AbilityId.CANCEL_BUILDINPROGRESS, building):
+                    self.do(building(AbilityId.CANCEL_BUILDINPROGRESS))
+            if self.chat:
+                await self._client.chat_send("Proxy build detected -> Panic!", team_only=False)
+
         if self.proxy_defence:
             if self.refineries_in_first_base < 2:
                 self.first_base_saturation = 4
@@ -3632,8 +3628,7 @@ class ANIbot(ANI_base_bot):
                 self.muster_home_defence = False
                 units = (scvs.filter(lambda x: not x.is_in_kodinturvajoukot
                                                and not x.is_in_repair_group
-                                               and not x.is_puuhapete)).random_group_of(
-                    6 - proxy_defence_force.amount)
+                                               and not x.is_puuhapete)).random_group_of(8)
                 for unit in units:
                     self.add_unit_to_kodinturvajoukot(unit)
                 print("proxy defence force is made")
@@ -3697,12 +3692,6 @@ class ANIbot(ANI_base_bot):
 
             scvs_that_need_repair = scvs.filter(lambda x: x.health_percentage < 1)
             for scv in scvs:
-                if self.proxy_structures and not self.barracks.ready and not self.factories and not self.starports:
-                    if len(scv.orders) < 3:
-                        self.do(scv.attack(self.enemy_structures.random.position, queue=True))
-                        print("SCV panic mode activated")
-                    continue
-
                 if self.home_in_danger and scv.is_in_kodinturvajoukot:
                     if scv.is_carrying_minerals:
                         self.do(scv(AbilityId.HARVEST_RETURN, self.ccANDoc.closest_to(scv)))
