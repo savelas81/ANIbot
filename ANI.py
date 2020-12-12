@@ -3692,6 +3692,8 @@ class ANIbot(ANI_base_bot):
 
             scvs_that_need_repair = scvs.filter(lambda x: x.health_percentage < 1)
             for scv in scvs:
+                if templars.closer_than(5, scv):
+                    continue
                 if self.home_in_danger and scv.is_in_kodinturvajoukot:
                     if scv.is_carrying_minerals:
                         self.do(scv(AbilityId.HARVEST_RETURN, self.ccANDoc.closest_to(scv)))
@@ -3723,7 +3725,7 @@ class ANIbot(ANI_base_bot):
                         and scv.distance_to(self.homeBase) > 10):
                     scv_targets = targets.exclude_type \
                         ([UnitTypeId.DRONE, UnitTypeId.SCV, UnitTypeId.PROBE]).closer_than(10, scv)
-                    if scv_targets.amount > 1 or scv_targets.of_type(UnitTypeId.DARKTEMPLAR):
+                    if scv_targets.amount > 1:
                         self.do(scv.gather(mf))
                         continue
         elif self.home_in_danger:
