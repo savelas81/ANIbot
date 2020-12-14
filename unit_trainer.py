@@ -157,6 +157,12 @@ class UnitTrainer:
                 self.bot.do(br.train(UnitTypeId.GHOST))
                 print("Training ghost")
                 return
+        if self.bot.marauder_push_limit != 0 and self.bot.barracks.amount >= self.bot.max_barracks:
+            if raxes_with_techlabs and self.bot.can_afford(UnitTypeId.MARAUDER):
+                br = raxes_with_techlabs.first
+                self.bot.do(br.train(UnitTypeId.MARAUDER))
+                print("Training marauder")
+            return
         if marauder_total < self.bot.maxmarauder and self.bot.can_afford(UnitTypeId.MARAUDER) and raxes_with_techlabs:
             br = raxes_with_techlabs.first
             self.bot.do(br.train(UnitTypeId.MARAUDER))

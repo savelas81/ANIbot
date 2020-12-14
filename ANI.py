@@ -1339,7 +1339,7 @@ class ANIbot(ANI_base_bot):
             14 = MCV
             15 = cc first
             """
-            # self.strategy = 13  # 2020
+            # self.strategy = 11  # 2020
             # self.strategy = random.choice([13])
             # self.strategy = random.randint(1, 15)
 
@@ -1923,20 +1923,20 @@ class ANIbot(ANI_base_bot):
                 self.build_extra_factories = True
                 self.build_extra_starports = False
             elif self.strategy == 11:  # Marauders
-                self.marauder_push_limit = 10
+                self.marauder_push_limit = 14
                 self.build_cc_home = False  # for testing only!
                 self.delay_expansion = False
                 self.delay_third = False
                 self.supply_limit_for_third = 50
                 self.upgrade_liberator = True
-                self.first_base_saturation = 2
+                self.first_base_saturation = 4
                 self.fast_vespene = False
                 self.refineries_in_first_base = 1  # note: refineries slow down first expansion!
                 self.refineries_in_second_base = 4
                 self.limit_vespene = 6
                 self.scv_limit = 80
-                self.scv_build_speed = 2
-                self.greedy_scv_consrtuction = True
+                self.scv_build_speed = 3
+                self.greedy_scv_consrtuction = False
                 self.BuildReapers = False
                 self.MaxGhost = 0
                 self.raven_left = 100
@@ -1949,7 +1949,7 @@ class ANIbot(ANI_base_bot):
                 self.upgrade_banshee_cloak = False
                 self.upgrade_banshee_speed = False
                 self.min_marine = 0  # try keep this amount of marines
-                self.max_marine = 30
+                self.max_marine = 50
                 self.marine_drop = False
                 self.marines_last_resort = False
                 self.max_thor = 0
@@ -1972,7 +1972,7 @@ class ANIbot(ANI_base_bot):
                 self.build_armory = False
                 self.upgrade_mech = False
                 self.fast_engineeringbay = False
-                self.maxmarauder = 10
+                self.maxmarauder = 1
                 self.build_barracks_reactors = False
                 self.assault_enemy_home = True
                 self.careful_marines = True
@@ -2258,7 +2258,7 @@ class ANIbot(ANI_base_bot):
 
         if self.iteraatio == 25 and self.chat:
             # await self._client.chat_send("InsANIty. Friends call me ANI. 3.12.2020", team_only=False)
-            await self._client.chat_send("ANI 11.12.2020. GLHF.", team_only=False)
+            await self._client.chat_send("ANI 14.12.2020. GLHF.", team_only=False)
         if self.iteraatio == 50:
             if self.strategy == 1:
                 if self.chat:
@@ -5093,7 +5093,9 @@ class ANIbot(ANI_base_bot):
                 and self.first_base_saturation < 0):
             return
         if self.ccANDoc.ready.amount < 2:
-            if self.delay_expansion and self.barracks:
+            if self.marauder_push_limit != 0 and self.barracks.amount >= self.max_barracks:
+                max_pending_sd = 2
+            elif self.delay_expansion and self.barracks:
                 max_pending_sd = 2
             else:
                 max_pending_sd = 1
@@ -5167,7 +5169,7 @@ class ANIbot(ANI_base_bot):
             return
         elif self.barracks or (self.fast_vespene and self.supplydepots):
             if self.ccANDoc.amount == 1:
-                if self.refineries_in_first_base >= 2 and self.factories:
+                if self.refineries_in_first_base >= 2 and (self.factories or self.barracks.ready.amount >= 3):
                     maxrefinery = self.refineries_in_first_base
                 elif self.refineries_in_first_base > 0:
                     maxrefinery = 1
@@ -5537,7 +5539,7 @@ class ANIbot(ANI_base_bot):
                         return False
                     else:
                         return True
-        if self.research_concussiveshels and (self.cyclones or self.cyclone_left <= 0):
+        if self.research_concussiveshels and self.marauders.amount >= 2 and (self.cyclones or self.cyclone_left <= 0):
             for facility in self.structures(BARRACKSTECHLAB).ready.idle:
                 if self.can_afford(RESEARCH_CONCUSSIVESHELLS) and not self.already_pending(PUNISHERGRENADES):
                     print("upgrade CONCUSSIVESHELLS")
