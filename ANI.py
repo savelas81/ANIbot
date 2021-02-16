@@ -561,6 +561,14 @@ class ANIbot(ANI_base_bot):
                         self.hellion_left = 6
                     if self.chat:
                         await self._client.chat_send("Ling rush?", team_only=False)
+                if self.enemy_structures.of_type(UnitTypeId.GATEWAY).amount >= 3:
+                    self.priority_tank = True
+                    self.siege_behind_wall = True
+                    self.build_cc_home = True
+                    self.scout_sent = False
+                    self.do(self.puuhapete.move(self.natural, queue=False))
+                    if self.chat:
+                        await self._client.chat_send("Why so many gateways?", team_only=False)
                 if self.enemy_structures.of_type(UnitTypeId.SPAWNINGPOOL):
                     if self.enemy_structures.of_type(UnitTypeId.SPAWNINGPOOL).first.is_active:
                         self.scout_sent = False
@@ -731,7 +739,7 @@ class ANIbot(ANI_base_bot):
                             print("Building cancelled")
                         elif await self.has_ability(AbilityId.SMART, self.puuhapete):
                             self.do(self.puuhapete(AbilityId.SMART, building))
-            if (self.already_pending(UnitTypeId.BARRACKS) and not self.scout_sent and self.send_scout
+            if (self.time > 55 and not self.scout_sent and self.send_scout
                     and not self.puuhapete.is_carrying_minerals and not self.home_in_danger):
                 waypoints = await self.scout_points()
                 for waypoint in waypoints:
@@ -1069,6 +1077,8 @@ class ANIbot(ANI_base_bot):
                 await self._client.chat_send("Dark templars? I should prepare for that.", team_only=False)
         if self.ccANDoc.ready.amount + self.townhalls_flying.amount >= 4:
             self.wait_until_4_orbital_ready = False
+        if self.marauder_push_limit != 0 and self.enemy_units.of_type(UnitTypeId.STALKER).amount >= 8:
+            self.marauder_push_limit = 0
         if self.marauders.amount >= self.marauder_push_limit > 0:
             self.marauder_push_limit = 0
             for unit in (self.marauders | self.marines):
@@ -1141,9 +1151,9 @@ class ANIbot(ANI_base_bot):
                 await self.safkaa()
             if not self.supplydepots.ready:
                 return
-            if self.barracks.amount < 1 and self.can_afford(UnitTypeId.BARRACKS):
-                await self.build_for_me(UnitTypeId.BARRACKS)
-                return
+            # if self.barracks.amount < 1 and self.can_afford(UnitTypeId.BARRACKS):
+            #     await self.build_for_me(UnitTypeId.BARRACKS)
+            #     return
             if self.barracks.ready.idle:
                 br = self.barracks.ready.idle.first
                 self.do(br.train(UnitTypeId.MARINE))
@@ -1339,7 +1349,8 @@ class ANIbot(ANI_base_bot):
             14 = MCV
             15 = cc first
             """
-            # self.strategy = 11  # 2020
+
+            # self.strategy = 12  # 2021
             # self.strategy = random.choice([13])
             # self.strategy = random.randint(1, 15)
 
@@ -1349,7 +1360,7 @@ class ANIbot(ANI_base_bot):
 
             if self.strategy is None:
                 self.strategy = random.randint(1, 15)
-                self.chat = False
+                # self.chat = False
                 "save strategy as victory, and remove if defeated"
                 self._training_data.saveVictory(self.opp_id, self.strategy)
             print('playing with strategy', self.strategy)
@@ -1372,7 +1383,7 @@ class ANIbot(ANI_base_bot):
             #     self.strategy = 3
             #     self._training_data.removeResult(self.opp_id)
 
-            # 2020
+            # 2021
             if self.strategy == 1:  # Greed
                 self.super_greed = True
                 self.build_cc_home = False
@@ -1388,7 +1399,7 @@ class ANIbot(ANI_base_bot):
                 self.raven_left = 100
                 self.fast_orbital = True
                 self.first_base_saturation = 0
-                self.scv_limit = 85
+                self.scv_limit = 80
                 self.max_BC = 6
                 self.last_phase = True
                 self.assault_enemy_home = True
@@ -1405,7 +1416,7 @@ class ANIbot(ANI_base_bot):
                 self.max_siege = 0
                 self.max_viking = 0  # build this amount of vikings before enemy air untis have been seen
                 self.max_barracks = 3
-                self.super_fast_barracks = True
+                self.super_fast_barracks = False
                 self.barracks_reactor_first = False
                 self.maxfactory = 1
                 self.max_starports = 2
@@ -2023,13 +2034,13 @@ class ANIbot(ANI_base_bot):
                 self.max_marine = 100
                 self.marine_drop = False
                 self.marines_last_resort = False
-                self.max_thor = 2
+                self.max_thor = 0
                 self.max_BC = 100
                 self.max_viking = 1  # build this amount of vikings before enemy air unts have been seen
                 self.maxmedivacs = 0
                 self.liberator_left = 25
                 self.liberator_priority = True
-                self.max_siege = 8
+                self.max_siege = 6
                 self.max_barracks = 1  # maxamount of barracks
                 self.super_fast_barracks = False
                 self.barracks_reactor_first = True
@@ -2225,9 +2236,9 @@ class ANIbot(ANI_base_bot):
                 self.send_scout = False
                 self.cc_first = True
                 self.delay_third = True
-                self.supply_limit_for_third = 150
+                self.supply_limit_for_third = 140
                 self.fast_vespene = True
-                self.scv_build_speed = 2
+                self.scv_build_speed = 3
                 self.scv_limit = 80
                 self.greedy_scv_consrtuction = False
                 self.fast_engineeringbay = False
@@ -2257,8 +2268,8 @@ class ANIbot(ANI_base_bot):
                 self.banshee_left = 0
 
         if self.iteraatio == 25 and self.chat:
-            # await self._client.chat_send("InsANIty. Friends call me ANI. 3.12.2020", team_only=False)
-            await self._client.chat_send("ANI 14.12.2020. GLHF.", team_only=False)
+            # await self._client.chat_send("InsANIty. Friends call me ANI. 15.2.2021", team_only=False)
+            await self._client.chat_send("ANI 15.2.2021. GLHF.", team_only=False)
         if self.iteraatio == 50:
             if self.strategy == 1:
                 if self.chat:
@@ -2279,7 +2290,6 @@ class ANIbot(ANI_base_bot):
             elif self.strategy == 5:
                 if self.chat:
                     await self._client.chat_send("Strategy: Air superiority. ", team_only=False)
-                    await self._client.chat_send("Thank you EladYaniv01 for MapAnalyzer. ", team_only=False)
                 print("Strat: Air superiority")
             elif self.strategy == 6:
                 if self.chat:
@@ -2480,7 +2490,7 @@ class ANIbot(ANI_base_bot):
                     return False
             if self.ccANDoc.amount > 2:
                 self.super_greed = False
-            if self.barracks:
+            if self.supplydepots:
                 if await self.is_expansions_left():
                     return True
                 else:
@@ -3655,7 +3665,7 @@ class ANIbot(ANI_base_bot):
 
         if self.kill_scout and self.time < 180:
             enemy_scouts = self.enemy_units.of_type([UnitTypeId.DRONE, UnitTypeId.SCV, UnitTypeId.PROBE])\
-                .closer_than(20, self.start_location)
+                .closer_than(40, self.start_location)
             if enemy_scouts and scvs:
                 if self.chat:
                     await self._client.chat_send("Enemy scout detected.", team_only=False)
@@ -4597,6 +4607,7 @@ class ANIbot(ANI_base_bot):
         if self.enemy_units.of_type(UnitTypeId.SIEGETANKSIEGED):
             self.kamikaze_target = None
             self.clear_units_in_kamikaze_troops()
+            return
         if not self.marauders.filter(lambda x: x.is_in_kamikaze_troops):
             self.kamikaze_target = None
         for marauder in self.marauders:
@@ -4609,7 +4620,7 @@ class ANIbot(ANI_base_bot):
                 self.kamikaze_target = None
                 self.clear_units_in_kamikaze_troops()
                 self.do(marauder.move(self.homeBase.position))
-                continue
+                return
             "don't abandon siege tanks during encounter"
             if siegetanks_need_protection.closer_than(15, marauder) \
                     and not self.siege_behind_wall and not self.agressive_marines:
@@ -5391,13 +5402,12 @@ class ANIbot(ANI_base_bot):
                             await self.build_for_me(UnitTypeId.STARPORT)
 
                     elif (not self.fusioncores
-                          and (self.upgrade_liberator and self.liberators and self.structures(
-                                UnitTypeId.STARPORTTECHLAB)
-                               or (self.last_phase and self.max_BC > 0))):
-                        if self.structures(UnitTypeId.STARPORTTECHLAB):
-                            if self.can_afford(UnitTypeId.FUSIONCORE) and not self.already_pending(
-                                    UnitTypeId.FUSIONCORE):
-                                await self.build_for_me(UnitTypeId.FUSIONCORE)
+                          and (self.upgrade_liberator and self.liberators
+                               or (self.last_phase and self.max_BC > 0
+                                   and self.structures(UnitTypeId.STARPORTTECHLAB).ready))):
+                        if self.can_afford(UnitTypeId.FUSIONCORE) and not self.already_pending(
+                                UnitTypeId.FUSIONCORE):
+                            await self.build_for_me(UnitTypeId.FUSIONCORE)
 
                     # # lift barracks or factory if threre is over 2 thors or tanks nearby
                     # if self.iteraatio % 250 == 0 and self.ccANDoc.ready.amount > 2:

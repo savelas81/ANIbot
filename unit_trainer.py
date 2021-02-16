@@ -454,7 +454,7 @@ class UnitTrainer:
                 self.bot.do(starport.train(UnitTypeId.BANSHEE))
                 return
         elif self.bot.liberator_left - self.bot.already_pending(UnitTypeId.LIBERATOR) > 0 \
-                and self.bot.can_afford(UnitTypeId.LIBERATOR) and starports_all and liberator_total < 20:
+                and self.bot.can_afford(UnitTypeId.LIBERATOR) and starports_all and liberator_total < 16:
             starport = starports_all.first
             self.bot.do(starport.train(UnitTypeId.LIBERATOR))
             print("Training liberator")

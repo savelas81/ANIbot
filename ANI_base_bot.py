@@ -554,7 +554,10 @@ class ANI_base_bot(SkeletonBot):
         self.remembered_kamikaze_troops_by_tag = {}
 
     def remove_from_kamikaze_troops(self, unit):
-        self.remembered_kamikaze_troops_by_tag.pop(unit.tag)
+        if unit.tag in self.remembered_kamikaze_troops_by_tag:
+            self.remembered_kamikaze_troops_by_tag.pop(unit.tag)
+        else:
+            print("TAG ERROR: trying to remove unit.tag from self.remembered_kamikaze_troops_by_tag")
 
     def assing_puuhapete(self, fixer):
         # adds units remembered_repair_group_by_tag
