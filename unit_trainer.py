@@ -215,6 +215,8 @@ class UnitTrainer:
                 return
             if self.bot.structures(UnitTypeId.FACTORYREACTOR).amount >= 2:
                 pass
+            elif self.bot.mines_left > 20 and self.bot.structures(UnitTypeId.FACTORYREACTOR) and not self.bot.structures(UnitTypeId.FACTORYTECHLAB):
+                pass
             elif (self.bot.hellion_left + self.bot.mines_left) > 8:
                 location = factory.add_on_position
                 if await self.bot.can_place(UnitTypeId.SUPPLYDEPOT, location):

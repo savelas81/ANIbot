@@ -1179,6 +1179,13 @@ class ANIbot(ANI_base_bot):
                 if expansion is None:
                     await self.buildings(maxbarracks, iteration)
                     await self.unit_trainer.trainer(maxreaper)
+                if self.ccANDoc.amount == 1 and self.expansion_builder_tag is None and self.minerals > 300:
+                    expansion = await self.get_next_expansion()
+                    if expansion:
+                        expansion_builder = self.select_contractor(expansion)
+                        if expansion_builder:
+                            self.expansion_builder_tag = expansion_builder.tag
+                            self.do(expansion_builder.move(expansion))
                 elif self.minerals > 400:
                     if self.build_cc_home:
                         await self.build_cc_at_home()
@@ -1350,7 +1357,7 @@ class ANIbot(ANI_base_bot):
             15 = cc first
             """
 
-            # self.strategy = 12  # 2021
+            # self.strategy = 13  # 2021
             # self.strategy = random.choice([13])
             # self.strategy = random.randint(1, 15)
 
@@ -1868,7 +1875,7 @@ class ANIbot(ANI_base_bot):
                 self.mines_left = 0
                 self.aggressive_mines = False
                 self.leapfrog_mines = False
-                self.cyclone_left = 10
+                self.cyclone_left = 16
                 self.liberator_left = 0
                 self.hellion_left = 0
                 self.research_blue_flame = False  # upgrades infernaligniter.
@@ -1881,10 +1888,11 @@ class ANIbot(ANI_base_bot):
                 self.marine_drop = False
                 self.marines_last_resort = False
                 self.max_thor = 30
+                self.flanking_thors = True
                 self.max_BC = 0
                 self.max_viking = 0
                 self.react_to_enemy_air = False  # increases max_viking to 16 if air units detected
-                self.max_siege = 16
+                self.max_siege = 12
                 self.faster_tanks = True
                 self.max_barracks = 2  # maxamount of barracks
                 self.delay_barracs = True  # makes only one barracks until starport ready
@@ -2124,6 +2132,7 @@ class ANIbot(ANI_base_bot):
                 self.build_starportreactor = 1
                 self.max_engineeringbays = 1
                 self.build_armory = True
+                self.fast_armory = False
                 self.upgrade_mech = True
                 self.fast_engineeringbay = False
                 self.maxmarauder = 0
@@ -2269,7 +2278,7 @@ class ANIbot(ANI_base_bot):
 
         if self.iteraatio == 25 and self.chat:
             # await self._client.chat_send("InsANIty. Friends call me ANI. 15.2.2021", team_only=False)
-            await self._client.chat_send("ANI 15.2.2021. GLHF.", team_only=False)
+            await self._client.chat_send("ANI 18.2.2021. GLHF.", team_only=False)
         if self.iteraatio == 50:
             if self.strategy == 1:
                 if self.chat:
@@ -2436,11 +2445,9 @@ class ANIbot(ANI_base_bot):
     async def we_should_expand(self):
         if self.marauder_push_limit != 0:
             return False
-        if self.cached_we_should_expand is not None:
-            return self.cached_we_should_expand
-        else:
+        if self.cached_we_should_expand is None:
             self.cached_we_should_expand = await self.cache_we_should_expand()
-            return self.cached_we_should_expand
+        return self.cached_we_should_expand
 
     async def cache_we_should_expand(self):
         if self.cc_first:
@@ -4206,8 +4213,21 @@ class ANIbot(ANI_base_bot):
             for depo in self.structures(SUPPLYDEPOT).ready.filter(lambda x: x.health_percentage >= 1):
                 self.do(depo(MORPH_SUPPLYDEPOT_LOWER))
 
+    async def siegetank_targets_in_range(self, tank, units_only=False):
+        tank_range = 16
+        siegetank_targets_on_ground = await self.siegetank_targets_on_ground()
+        if units_only:
+            return siegetank_targets_on_ground.closer_than(tank_range, tank)
+        targets = (siegetank_targets_on_ground.closer_than(tank_range, tank) |
+                    self.enemy_structures.visible.in_attack_range_of(tank))
+        return targets
+
+    async def siegetank_targets_on_ground(self):
+        units_to_ignore = [UnitTypeId.ADEPTPHASESHIFT, UnitTypeId.EGG, UnitTypeId.LARVA,
+                           UnitTypeId.DRONE, UnitTypeId.SCV, UnitTypeId.PROBE, UnitTypeId.MULE]
+        return self.enemy_units_on_ground.exclude_type(units_to_ignore)
+
     async def move_tanks(self):
-        tank_range = 14
         if self.bunkers and (self.delay_third or (self.max_starports == 0 and self.ccANDoc.amount < 3)):
             bunker = self.bunkers.random.position
             waypoint = self.vespene_geyser.closest_to(bunker).position
@@ -4229,20 +4249,17 @@ class ANIbot(ANI_base_bot):
                     continue
             return
 
-        units_to_ignore = [ADEPTPHASESHIFT, EGG, LARVA, DRONE, SCV, PROBE]
-        siegetank_targets = self.enemy_units_and_structures.not_flying.filter(lambda x: x.is_visible)
-        siegetank_primary_targets = siegetank_targets.filter(lambda x: x.can_attack_ground)
+        siegetank_targets = await self.siegetank_targets_on_ground()
+        visible_enemy = self.enemy_units_on_ground.visible
         for tank in self.siegetanks:
             no_siege_allowed_targets = self.enemy_units.of_type([UnitTypeId.ZERGLING, UnitTypeId.ZEALOT]). \
                 closer_than(17, tank)
-            enemyAttackRange = siegetank_primary_targets.closer_than(tank_range, tank)
             if await self.avoid_own_nuke(tank):
                 continue
             if await self.avoid_storms(tank):
                 continue
             # if await self.avoid_enemy_siegetanks(tank):
             #     continue
-            # check if enemy ground units exists
             if tank.health_percentage < 0.5 and tank.weapon_cooldown == 0:
                 if tank.distance_to(self.homeBase) > 15:
                     self.do(tank.attack(self.homeBase.position))
@@ -4250,23 +4267,21 @@ class ANIbot(ANI_base_bot):
             if tank.health_percentage < 1 and tank.distance_to(self.homeBase) < 15:
                 continue
 
-            if siegetank_targets:
-                # siegemode if close enough to enemy
-                if self.canSiege and enemyAttackRange.exclude_type(
-                        units_to_ignore) and not no_siege_allowed_targets \
-                        and await self.can_cast(tank, AbilityId.SIEGEMODE_SIEGEMODE):
-                    self.do(tank(AbilityId.SIEGEMODE_SIEGEMODE))
-                    self.canSiege = False
+            # siegemode if close enough to enemy
+            enemy_attack_range = await self.siegetank_targets_in_range(tank, units_only=True)
+            if self.canSiege and enemy_attack_range and not no_siege_allowed_targets \
+                    and await self.can_cast(tank, AbilityId.SIEGEMODE_SIEGEMODE):
+                self.do(tank(AbilityId.SIEGEMODE_SIEGEMODE))
+                self.canSiege = False
+                continue
+            if visible_enemy:
+                if tank.weapon_cooldown != 0 and visible_enemy.in_attack_range_of(tank, bonus_distance=-0.5):
+                    self.do(tank.move(tank.position.towards(visible_enemy.closest_to(tank), -10)))
                     continue
-                if tank.weapon_cooldown != 0:
-                    # if self.canSiege:
-                    #     self.do(tank(AbilityId.SIEGEMODE_SIEGEMODE))
-                    #     self.canSiege = False
-                    #     continue
-                    if siegetank_targets.in_attack_range_of(tank, bonus_distance=-0.5):
-                        self.do(tank.move(tank.position.towards(siegetank_targets.closest_to(tank), -10)))
-                        continue
-                self.do(tank.attack(siegetank_targets.closest_to(tank)))
+                self.do(tank.attack(visible_enemy.closest_to(tank).position))
+                continue
+            if self.enemy_structures.visible:
+                self.do(tank.attack(self.enemy_structures.visible.closest_to(tank).position))
                 continue
 
             if self.general:
@@ -4279,7 +4294,7 @@ class ANIbot(ANI_base_bot):
                 self.do(tank.move(await self.get_outpost()))
                 continue
 
-        ## SIEGETANK deside target and if need to turn tank mode
+        # SIEGETANK deside target and if need to turn tank mode
         if self.build_cc_home:
             return
         if self.bunkers and self.delay_third:
@@ -4287,38 +4302,37 @@ class ANIbot(ANI_base_bot):
         artillery = self.siegetanks_sieged
         if self.agressive_tanks or self.minerals > 2000:
             for tank in artillery:
-                if not self.enemy_units_on_ground.in_attack_range_of(tank) \
-                        and not self.enemy_structures.in_attack_range_of(tank):
+                if not await self.siegetank_targets_in_range(tank):
                     self.do(tank(AbilityId.UNSIEGE_UNSIEGE))
             return
 
         max_distance_to_closest_enemy = 0
         self.unsiegetimer += 1
         for tank in artillery:
-            enemyAttackRange = siegetank_targets.closer_than(tank_range, tank)
-            if enemyAttackRange:
+            enemy_attack_range = await self.siegetank_targets_in_range(tank)
+            if enemy_attack_range:
                 self.unsiegetimer = 0
                 break
-        if self.unsiegetimer > 20:
+        if self.unsiegetimer > 30:
             self.unsiegetimer = 0
             for tank in self.siegetanks_sieged.take(3):
                 self.do(tank(AbilityId.UNSIEGE_UNSIEGE))
                 continue
             return
 
-        if siegetank_targets:
-            if self.siegetanks.filter(
-                    lambda x: x.health_percentage > 0.5).amount < 2 and self.siegetanks_sieged.amount > 2:
-                tank_to_unsiege = None
-                for tank in artillery:
-                    if siegetank_targets.closer_than(tank_range, tank):
-                        continue
-                    distance_to_closest_enemy = tank.distance_to(siegetank_targets.closest_to(tank))
-                    if max_distance_to_closest_enemy < distance_to_closest_enemy:
-                        max_distance_to_closest_enemy = distance_to_closest_enemy
-                        tank_to_unsiege = tank
-                if tank_to_unsiege:
-                    self.do(tank_to_unsiege(AbilityId.UNSIEGE_UNSIEGE))
+        if siegetank_targets and self.siegetanks.filter(
+                lambda x: x.health_percentage > 0.5).amount < 2 and self.siegetanks_sieged.amount > 3:
+            tank_to_unsiege = None
+            for tank in artillery:
+                enemy_attack_range = await self.siegetank_targets_in_range(tank)
+                if enemy_attack_range:
+                    continue
+                distance_to_closest_enemy = tank.distance_to(siegetank_targets.closest_to(tank))
+                if max_distance_to_closest_enemy < distance_to_closest_enemy:
+                    max_distance_to_closest_enemy = distance_to_closest_enemy
+                    tank_to_unsiege = tank
+            if tank_to_unsiege:
+                self.do(tank_to_unsiege(AbilityId.UNSIEGE_UNSIEGE))
 
     async def move_battle_ruiser(self):
         if not self.battlecruisers:
@@ -5353,6 +5367,12 @@ class ANIbot(ANI_base_bot):
                     if self.minerals < 175 and self.factories.ready:
                         return
 
+                    if self.mines_left > 20 and not self.armories \
+                            and not self.already_pending(UnitTypeId.ARMORY) and self.factories.ready.exists:
+                        if self.can_afford(UnitTypeId.ARMORY):
+                            await self.build_for_me(UnitTypeId.ARMORY)
+                        return
+
                     if self.barracks.ready.exists and \
                             self.factories.ready.amount + self.factoriesflying.amount + \
                             self.already_pending(UnitTypeId.FACTORY) < self.maxfactory:
@@ -5387,8 +5407,7 @@ class ANIbot(ANI_base_bot):
                             and self.build_armory
                             and not self.delay_expansion
                             and self.factories.ready
-                            and ((
-                                         self.fast_armory and self.ccANDoc.ready.amount >= 2) or self.ccANDoc.ready.amount >= 3)):
+                            and ((self.fast_armory and self.ccANDoc.ready.amount >= 2) or self.ccANDoc.ready.amount >= 3)):
                         if self.can_afford(UnitTypeId.ARMORY) and self.factories.ready.exists:
                             await self.build_for_me(UnitTypeId.ARMORY)
                             return
@@ -5461,6 +5480,8 @@ class ANIbot(ANI_base_bot):
             return True
         if self.upgrade_mech and self.vespene > 100 and self.minerals > 100:
             for facility in self.armories.ready.idle:
+                if self.mines_left > 20 and self.already_pending(UpgradeId.DRILLCLAWS) == 0:
+                    continue
                 abilities = await self.get_available_abilities(facility)
                 for upgrade_level in range(1, 4):
                     upgrade_armor_id = getattr(sc2.constants,
@@ -5475,8 +5496,11 @@ class ANIbot(ANI_base_bot):
                     if (upgrade_vehicleweapon_id in abilities
                             and self.can_afford(upgrade_vehicleweapon_id)
                             and self.upgrade_vehicle_weapons):
-                        self.do(facility(upgrade_vehicleweapon_id))
-                        return False
+                        if self.mines_left > 20 and self.already_pending(UpgradeId.TERRANSHIPWEAPONSLEVEL2) == 0:
+                            pass
+                        else:
+                            self.do(facility(upgrade_vehicleweapon_id))
+                            return False
                     if (upgrade_armor_id in abilities
                             and self.can_afford(upgrade_armor_id)
                             and not self.upgrade_marine_defence_and_mech_attack):
@@ -5500,11 +5524,11 @@ class ANIbot(ANI_base_bot):
                 print("upgrade AbilityId.RESEARCH_INFERNALPREIGNITER")
                 continue
             if ((self.mines.amount + self.mines_burrowed.amount + self.mines_left >= 10)
-                    and self.can_afford(AbilityId.RESEARCH_DRILLINGCLAWS)
                     and self.mines
                     and AbilityId.RESEARCH_DRILLINGCLAWS in abilities):
-                self.do(facility(AbilityId.RESEARCH_DRILLINGCLAWS))
-                continue
+                if self.can_afford(AbilityId.RESEARCH_DRILLINGCLAWS):
+                    self.do(facility(AbilityId.RESEARCH_DRILLINGCLAWS))
+                return False
             if self.cyclones.amount >= 2 and self.can_afford(
                     RESEARCH_CYCLONELOCKONDAMAGE) and AbilityId.RESEARCH_CYCLONELOCKONDAMAGE in abilities:
                 self.do(facility(AbilityId.RESEARCH_CYCLONELOCKONDAMAGE))

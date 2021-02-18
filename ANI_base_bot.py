@@ -37,6 +37,7 @@ class ANI_base_bot(SkeletonBot):
     we_win = None
     cached_expansions = []
     take_third_first = False
+    expansion_builder_tag = None
 
     def configure_managers(self) -> Optional[List["ManagerBase"]]:
         return []
@@ -301,17 +302,6 @@ class ANI_base_bot(SkeletonBot):
                 self.take_third_first = False
             else:
                 location = self.take_third_first
-        # if self.super_greed:
-        #     greedy_expansions = []
-        #     for x in self.cached_expansions:
-        #         if not await self.can_place(UnitTypeId.COMMANDCENTER, x):
-        #             continue
-        #         if self.distance_math_hypot(x, self.natural) < 3:
-        #             continue
-        #         if self.distance_math_hypot(x, self.start_location) < self.distance_math_hypot(x,
-        #                                                                                        self.enemy_start_location):
-        #             greedy_expansions.append(x)
-        #     location = random.choice(greedy_expansions)
 
         if not location:
             location = await self.get_next_expansion()
@@ -319,7 +309,15 @@ class ANI_base_bot(SkeletonBot):
             print("No expansions left and trying to expand!")
             return False
 
-        unit = self.select_contractor(location)
+        unit = None
+        if self.expansion_builder_tag in self.units.of_type(UnitTypeId.SCV).tags:
+            for scv in self.units.of_type(UnitTypeId.SCV):
+                if scv.tag == self.expansion_builder_tag:
+                    unit = scv
+                    self.expansion_builder_tag = "used"
+                    break
+        if not unit:
+            unit = self.select_contractor(location)
         if not unit:
             return False
 

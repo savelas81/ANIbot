@@ -16,22 +16,35 @@ class MineController:
     async def get_mine_grid(self):
         self.new_grid_interval -= 1
         if self.new_grid_interval <= 0:
-            self.new_grid_interval = 15
+            self.new_grid_interval = 10
             self.cached_pyastar_grid = self.bot.map_data.get_pyastar_grid()
 
         self.mine_grid = copy.copy(self.cached_pyastar_grid)
         mines_sorted = self.bot.mines_burrowed.sorted(lambda x: x.distance_to(self.bot.enemy_start_location))
-        max_mines_for_influence = 20
+        max_mines_for_influence = 15
         for mine in mines_sorted:
             if max_mines_for_influence <= 0:
-                return
+                break
             else:
                 max_mines_for_influence -= 1
             self.mine_grid = self.bot.map_data.add_cost(
-                position=mine.position, radius=8, grid=self.mine_grid)
+                position=mine.position, radius=6, grid=self.mine_grid, weight=50)
+        for unit in self.bot.mines.filter(lambda x: x.tag not in self.bot.remembered_fired_mines_by_tag):
+            if len(unit.orders) < 2:
+                continue
+            print("Mine orders:")
+            for order in unit.orders:
+                if isinstance(order.target, int):
+                    continue
+                target = order.target
+                point = Point2.from_proto(target)
+                print(point)
+                self.mine_grid = self.bot.map_data.add_cost(
+                    position=point, radius=3, grid=self.mine_grid, weight=10)
+
         for unit in self.bot.enemy_units.of_type(UnitTypeId.SIEGETANKSIEGED):
             self.mine_grid = self.bot.map_data.add_cost(
-                position=unit.position, radius=(unit.ground_range + 2), grid=self.mine_grid, weight=300)
+                position=unit.position, radius=(unit.ground_range + 2), grid=self.mine_grid, weight=100)
         for unit in self.bot.enemy_structures:
             if unit.is_detector:
                 self.mine_grid = self.bot.map_data.add_cost(
@@ -47,24 +60,19 @@ class MineController:
         mines_shot = self.bot.mines.filter(lambda x: x.tag in self.bot.remembered_fired_mines_by_tag)
         mines_burrowed = self.bot.mines_burrowed
         mines_burrowed = mines_burrowed.sorted(lambda x: x.distance_to(self.bot.enemy_start_location), reverse=True)
-        if self.bot.activate_all_mines:
-            limit = 100
-        elif self.bot.leapfrog_mines and mines_burrowed.amount > 25:
-            limit = 100
-        else:
-            limit = 1
         cyclones = self.bot.cyclones
+        thors = self.bot.thors
         units_to_ignore = [UnitTypeId.ADEPTPHASESHIFT, UnitTypeId.EGG, UnitTypeId.LARVA,
                            UnitTypeId.CHANGELINGMARINESHIELD, UnitTypeId.CHANGELINGMARINE]
         targets = self.bot.enemy_units.exclude_type(units_to_ignore)
-        if cyclones.exists and self.bot.cyclone_left <= 0:
+        if thors:
+            master = thors.furthest_to(self.bot.homeBase)
+        elif cyclones.exists and self.bot.cyclone_left <= 0:
             master = cyclones.furthest_to(self.bot.homeBase)
         elif self.bot.marauders:
             master = self.bot.marauders.furthest_to(self.bot.homeBase)
         elif self.bot.siegetanks:
             master = self.bot.siegetanks.furthest_to(self.bot.homeBase)
-        # elif self.bot.marines:
-        #     master = self.bot.marines.furthest_to(self.bot.homeBase)
         else:
             master = None
         if not self.bot.activate_all_mines and self.bot.supply_used > 190 and self.bot.mines_left <= 0:
@@ -84,17 +92,14 @@ class MineController:
         for mine in mines_ready:
             if await self.bot.avoid_own_nuke(mine):
                 continue
+            if targets.closer_than(6, mine):
+                self.bot.do(mine(AbilityId.BURROWDOWN_WIDOWMINE))
+                continue
             if self.bot.activate_all_mines:
-                if targets.closer_than(6, mine):
-                    self.bot.do(mine(AbilityId.BURROWDOWN_WIDOWMINE))
-                    continue
                 if targets:
                     target = targets.closest_to(mine)
                     self.bot.do(mine.move(target))
                     continue
-                if mines_ready.amount > limit and self.bot.iteraatio % 2 == 0:
-                    self.bot.do(mine(AbilityId.BURROWDOWN_WIDOWMINE))
-                    break
                 if master:
                     if mine.distance_to(master) > 20:
                         self.bot.do(mine.move(master.position))
@@ -103,10 +108,7 @@ class MineController:
                     cc = self.bot.start_location
                     self.bot.do(mine.move(cc.position))
                 continue
-            elif targets.closer_than(8, mine):
-                if targets.closer_than(6, mine):
-                    self.bot.do(mine(AbilityId.BURROWDOWN_WIDOWMINE))
-                    continue
+            elif targets.closer_than(10, mine):
                 if self.bot.mines_burrowed.closer_than(2, mine) and self.bot.leapfrog_mines:
                     pass
                 else:
@@ -116,30 +118,37 @@ class MineController:
                 continue
             if self.bot.leapfrog_mines:
                 attack_mines = self.bot.mines_burrowed.closer_than(
-                    self.bot.defence_radius, self.bot.enemy_start_location)
+                    self.bot.defence_radius, self.bot.enemy_start_location).filter(
+                    lambda x: x.buff_duration_remain <= 0)
                 avg_dist = self.bot.defence_radius
                 if attack_mines:
                     avg_dist = attack_mines.furthest_to(self.bot.enemy_start_location)\
-                                   .distance_to(self.bot.enemy_start_location) - 1
-                    # avg_dist = attack_mines.center.distance_to(self.bot.enemy_start_location)
+                                   .distance_to(self.bot.enemy_start_location) - 2
                 if mine.distance_to(self.bot.enemy_start_location) < avg_dist \
-                        and not self.bot.mines_burrowed.closer_than(6, mine):
+                        and not self.bot.mines_burrowed.closer_than(5, mine):
                     self.bot.do(mine(AbilityId.BURROWDOWN_WIDOWMINE))
                 if len(mine.orders) == 0:
                     if self.mine_grid is None:
                         await self.get_mine_grid()
-                    start = mine.position
+                    start = self.bot.start_location.random_on_distance(4)
                     goal = self.bot.enemy_start_location.random_on_distance(4)
                     path = self.bot.map_data.pathfind(start=start, goal=goal, grid=self.mine_grid,
                                                       allow_diagonal=True, sensitivity=5)
                     # self.bot.map_data.plot_influenced_path\
                     #     (start=start, goal=goal, weight_array=self.mine_grid, allow_diagonal=True)
                     # self.bot.map_data.show()
-                    steps_left = 6
+                    queue = False
+                    steps_left = 8
                     if path:
                         for point in path:
+                            if point.distance_to(self.bot.enemy_start_location) > avg_dist + 7:
+                                continue
                             if steps_left > 0:
-                                self.bot.do(mine.move(point, queue=True))
+                                if not queue:
+                                    self.bot.do(mine.move(point, queue=False))
+                                    queue = True
+                                else:
+                                    self.bot.do(mine.move(point, queue=True))
                                 steps_left -= 1
                             else:
                                 continue
@@ -177,19 +186,26 @@ class MineController:
                         if self.bot.chat:
                             await self.bot._client.chat_send("You would not shoot unarmed mine, would you?",
                                                          team_only=False)
-                if self.bot.already_pending(DRILLCLAWS) < 1 or mine.health_percentage < 1:
+                if not self.bot.armories.ready or mine.health_percentage < 1:
                     if mine.distance_to(self.bot.homeBase) > 10:  # and self.bot.enemy_units.closer_than(15, mine):
                         self.bot.do(mine(AbilityId.BURROWUP_WIDOWMINE))
                         continue
-            else:
-                if mine.health_percentage >= 1 and mine.tag in self.bot.remembered_fired_mines_by_tag:
-                    del self.bot.remembered_fired_mines_by_tag[mine.tag]
-                    continue
+            elif mine.health_percentage >= 1 and mine.tag in self.bot.remembered_fired_mines_by_tag:
+                del self.bot.remembered_fired_mines_by_tag[mine.tag]
+                continue
             if await self.bot.avoid_own_nuke(mine):
                 self.bot.do(mine(AbilityId.BURROWUP_WIDOWMINE))
                 break
-            if (self.bot.iteraatio % 4 == 0 and mines_ready.amount < limit) \
-                    and self.bot.mines_burrowed.amount > 1 and not targets.closer_than(8, mine) \
-                    and mine.tag not in self.bot.remembered_fired_mines_by_tag:
+            if mine.tag in self.bot.remembered_fired_mines_by_tag:
+                continue
+            if self.bot.activate_all_mines and not targets.closer_than(6, mine):
+                self.bot.do(mine(AbilityId.BURROWUP_WIDOWMINE))
+                continue
+            if targets.closer_than(10, mine):
+                continue
+            if mine.distance_to(self.bot.homeBase) <= 10:
+                self.bot.do(mine(AbilityId.BURROWUP_WIDOWMINE))
+                break
+            if (not mines_ready or self.bot.mines_burrowed.amount > 20) and self.bot.iteraatio % 6 == 0:
                 self.bot.do(mine(AbilityId.BURROWUP_WIDOWMINE))
                 break
