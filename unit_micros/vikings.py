@@ -242,7 +242,7 @@ class VikingController:
             if viking.distance_to(self.bot.homeBase) < 15:
                 if viking.health_percentage < 1:
                     continue
-            if self.enemy_has_air > 0:
+            if self.enemy_has_air > 0 or self.bot.enemy_structures.flying:
                 self.bot.do(viking(AbilityId.MORPH_VIKINGFIGHTERMODE))
                 continue
 

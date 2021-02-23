@@ -689,7 +689,7 @@ class ANIbot(ANI_base_bot):
                 if self.chat:
                     await self._client.chat_send("Take those tin cans somewhere else!", team_only=False)
                 self.refineries_in_second_base = 4
-            if self.max_viking < 6 and self.enemy_units.of_type((UnitTypeId.VOIDRAY)):
+            if self.max_viking < 6 and self.enemy_units.of_type(UnitTypeId.VOIDRAY):
                 self.max_viking = 6
                 if self.max_starports < 4:
                     self.max_starports += 1
@@ -1147,13 +1147,13 @@ class ANIbot(ANI_base_bot):
                     print("up grade orbital")
             can_build = False
         elif self.super_greed:
-            if self.supplydepots.amount < 3:
-                await self.safkaa()
+            # if self.supplydepots.amount < 3:
+            #     await self.safkaa()
             if not self.supplydepots.ready:
                 return
-            # if self.barracks.amount < 1 and self.can_afford(UnitTypeId.BARRACKS):
-            #     await self.build_for_me(UnitTypeId.BARRACKS)
-            #     return
+            if self.barracks.amount < 1 and self.can_afford(UnitTypeId.BARRACKS):
+                await self.build_for_me(UnitTypeId.BARRACKS)
+                return
             if self.barracks.ready.idle:
                 br = self.barracks.ready.idle.first
                 self.do(br.train(UnitTypeId.MARINE))
@@ -1357,7 +1357,7 @@ class ANIbot(ANI_base_bot):
             15 = cc first
             """
 
-            # self.strategy = 13  # 2021
+            self.strategy = 1  # 2021
             # self.strategy = random.choice([13])
             # self.strategy = random.randint(1, 15)
 
@@ -1396,13 +1396,13 @@ class ANIbot(ANI_base_bot):
                 self.build_cc_home = False
                 self.wait_until_4_orbital_ready = False
                 self.greedy_third = False
-                self.refineries_in_first_base = 0
-                self.refineries_in_second_base = 3
+                self.refineries_in_first_base = 1
+                self.refineries_in_second_base = 0
                 self.more_depots = True
                 self.send_scout = True
                 self.greedy_scv_consrtuction = True
-                self.limit_vespene = 4
-                self.scv_build_speed = 3
+                self.limit_vespene = 0
+                self.scv_build_speed = 2
                 self.raven_left = 100
                 self.fast_orbital = True
                 self.first_base_saturation = 0
@@ -1413,36 +1413,37 @@ class ANIbot(ANI_base_bot):
                 self.BuildReapers = False
                 self.maxmarauder = 2
                 self.MaxGhost = 0
-                self.expand_for_vespene = False
-                self.mines_left = 0
-                self.cyclone_left = 0
+                self.expand_for_vespene = True
+                self.mines_left = 2
+                self.cyclone_left = 5
                 self.banshee_left = 0
-                self.liberator_left = 0
+                self.liberator_left = 5
                 self.liberator_priority = False
-                self.hellion_left = 0
-                self.max_siege = 0
+                self.hellion_left = 4
+                self.max_siege = 4
                 self.max_viking = 0  # build this amount of vikings before enemy air untis have been seen
                 self.max_barracks = 3
                 self.super_fast_barracks = False
                 self.barracks_reactor_first = False
                 self.maxfactory = 1
-                self.max_starports = 2
+                self.max_starports = 10
+                self.build_extra_factory_and_starport = False
                 self.build_barracks_reactors = True
-                self.build_starportreactor = 2
-                self.maxmedivacs = 10
+                self.build_starportreactor = 1
+                self.maxmedivacs = 3
                 self.min_marine = 20  # try keep this amount of marines
                 self.max_marine = 120
-                self.agressive_marines = True
+                self.agressive_marines = False
                 self.careful_marines = False
-                self.agressive_tanks = True
+                self.agressive_tanks = False
                 self.research_stimpack = True
                 self.upgrade_marine = True
                 self.research_concussiveshels = True
                 self.marines_last_resort = False
                 self.upgrade_vehicle_weapons = False
-                self.max_engineeringbays = 2
-                self.build_armory = False
-                self.upgrade_mech = False
+                self.max_engineeringbays = 1
+                self.build_armory = True
+                self.upgrade_mech = True
                 self.build_missile_turrets = True
                 self.mineral_field_turret = True
                 self.max_thor = 0
@@ -1450,8 +1451,8 @@ class ANIbot(ANI_base_bot):
                 self.build_extra_factories = False
                 self.build_extra_starports = True
             elif self.strategy == 2:  # 2 base push
-                self.refineries_in_first_base = 1
                 self.refineries_in_second_base = 3
+                self.refineries_in_first_base = 1
                 self.take_third_first = False
                 if self.mineral_field.of_type(rich_mineralfield):
                     self.natural = await self.get_third_base()
@@ -1646,7 +1647,7 @@ class ANIbot(ANI_base_bot):
                 self.greedy_third = False
                 self.fast_orbital = True
                 self.scv_limit = 80
-                self.scv_build_speed = 2
+                self.scv_build_speed = 3
                 self.more_depots = False
                 self.research_stimpack = False
                 self.research_combatshield = False
@@ -1974,7 +1975,7 @@ class ANIbot(ANI_base_bot):
                 self.max_thor = 0
                 self.max_BC = 4
                 self.max_viking = 12  # build this amount of vikings before enemy air unts have been seen
-                self.react_to_enemy_air = False  # increases max_viking to 16 if air units detected
+                self.react_to_enemy_air = True  # voidray opening obliterated bot without this
                 self.maxmedivacs = 6
                 self.dual_liberator = True
                 self.liberator_left = 20
@@ -2278,7 +2279,7 @@ class ANIbot(ANI_base_bot):
 
         if self.iteraatio == 25 and self.chat:
             # await self._client.chat_send("InsANIty. Friends call me ANI. 15.2.2021", team_only=False)
-            await self._client.chat_send("ANI 18.2.2021. GLHF.", team_only=False)
+            await self._client.chat_send("ANI 20.2.2021. GLHF.", team_only=False)
         if self.iteraatio == 50:
             if self.strategy == 1:
                 if self.chat:
@@ -2491,16 +2492,16 @@ class ANIbot(ANI_base_bot):
                         self.do(cc(AbilityId.CANCEL_BUILDINPROGRESS))
                 if self.chat:
                     await self._client.chat_send("Take your buildings to your own base! Ok?", team_only=False)
-                if await self.is_expansions_left():
-                    return True
-                else:
-                    return False
-            if self.ccANDoc.amount > 2:
+                return False
+            if self.ccANDoc.amount > 5:
                 self.super_greed = False
-            if self.supplydepots:
+            if self.barracks:
+                if self.already_pending(UnitTypeId.COMMANDCENTER) and self.minerals < 400:
+                    return False
                 if await self.is_expansions_left():
                     return True
                 else:
+                    self.super_greed = False
                     return False
             else:
                 return False
@@ -3262,7 +3263,7 @@ class ANIbot(ANI_base_bot):
                 await self._client.chat_send("Abort marinedrop strategy. Go turtle.", team_only=False)
 
         "expand if first base saturation reached"
-        if self.ccANDoc.amount == 1 and not self.already_pending(COMMANDCENTER):
+        if self.ccANDoc.amount == 1 and not self.already_pending(UnitTypeId.COMMANDCENTER):
             for cc in self.ccANDoc:
                 if cc.assigned_harvesters >= (cc.ideal_harvesters + self.first_base_saturation):
                     if self.minerals > 400:
@@ -5184,10 +5185,13 @@ class ANIbot(ANI_base_bot):
             return
         if self.wait_until_4_orbital_ready:
             return
+        if self.ccANDoc.ready.amount > 2 and self.expand_fast_for_vespene:
+            await self.execute_build_refinery()
+            return
         if self.minerals < self.vespene + 100:  # we have enough vespene. No refinery needed.
             return
-        if self.super_greed:
-            return
+        # if self.super_greed:
+        #     return
         if self.mech_build and self.ccANDoc.amount == 2 and self.refineries.amount >= 2:
             return
         if not self.expand_for_vespene and self.already_pending(UnitTypeId.REFINERY):
@@ -5219,12 +5223,12 @@ class ANIbot(ANI_base_bot):
     async def execute_build_refinery(self):
         if self.ccANDoc.amount <= 2:
             CC_that_need_refinery = self.ccANDoc.ready
+        elif self.expand_fast_for_vespene:
+            CC_that_need_refinery = self.ccANDoc
         else:
             CC_that_need_refinery = self.ccANDoc.filter(lambda x: x.health_percentage > 0.6)
         if self.refineries_in_first_base == 0:
             max_pending_refineries = 1
-        elif self.expand_fast_for_vespene:
-            max_pending_refineries = 4
         else:
             max_pending_refineries = 2
         if self.minerals < 75:
@@ -5276,11 +5280,13 @@ class ANIbot(ANI_base_bot):
                             UnitTypeId.BARRACKS)) < maxbarracks:
                         if self.barracks and self.max_starports == 0 and not self.factories:
                             pass
+                        elif self.barracks and self.super_greed:
+                            pass
                         elif not self.already_pending(UnitTypeId.BARRACKS) or self.super_fast_barracks:
                             if self.can_afford(UnitTypeId.BARRACKS):
                                 await self.build_for_me(UnitTypeId.BARRACKS)
                             return
-                        if not self.expand_for_vespene and self.can_afford(UnitTypeId.BARRACKS) \
+                        elif not self.expand_for_vespene and self.can_afford(UnitTypeId.BARRACKS) \
                                 and self.already_pending(UnitTypeId.BARRACKS) < 3:
                             await self.build_for_me(UnitTypeId.BARRACKS)
                             return
@@ -5417,9 +5423,11 @@ class ANIbot(ANI_base_bot):
                           and not self.already_pending(UnitTypeId.STARPORT)
                           and not self.delay_starport
                           and can_build_starport):
-                        if self.factories.ready.exists and self.can_afford(UnitTypeId.STARPORT) and self.minerals > 175:
+                        if self.factories.ready and self.can_afford(UnitTypeId.STARPORT) and self.minerals > 175:
                             await self.build_for_me(UnitTypeId.STARPORT)
-
+                    elif (self.starports.amount + self.starportflying.amount) < self.max_starports == 10 \
+                            and self.minerals > 500 and self.factories.ready and self.can_afford(UnitTypeId.STARPORT):
+                        await self.build_for_me(UnitTypeId.STARPORT)
                     elif (not self.fusioncores
                           and (self.upgrade_liberator and self.liberators
                                or (self.last_phase and self.max_BC > 0
@@ -5427,16 +5435,6 @@ class ANIbot(ANI_base_bot):
                         if self.can_afford(UnitTypeId.FUSIONCORE) and not self.already_pending(
                                 UnitTypeId.FUSIONCORE):
                             await self.build_for_me(UnitTypeId.FUSIONCORE)
-
-                    # # lift barracks or factory if threre is over 2 thors or tanks nearby
-                    # if self.iteraatio % 250 == 0 and self.ccANDoc.ready.amount > 2:
-                    #     for sp in (self.factories.ready | self.barracks.ready | self.starports.ready):
-                    #         machinery = (self.thors | self.siegetanks)
-                    #         tooClose = machinery.closer_than(7, sp)
-                    #         if len(tooClose) > 1:
-                    #             self.do(sp(LIFT))
-                    #             print("logistic factory lift")
-                    #             break
 
     async def landbuildings(self):
         flyingStructures = self.barracksflyings.idle
