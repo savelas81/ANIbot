@@ -32,13 +32,11 @@ class MineController:
         for unit in self.bot.mines.filter(lambda x: x.tag not in self.bot.remembered_fired_mines_by_tag):
             if len(unit.orders) < 2:
                 continue
-            print("Mine orders:")
             for order in unit.orders:
                 if isinstance(order.target, int):
                     continue
                 target = order.target
                 point = Point2.from_proto(target)
-                print(point)
                 self.mine_grid = self.bot.map_data.add_cost(
                     position=point, radius=3, grid=self.mine_grid, weight=10)
 
@@ -119,7 +117,7 @@ class MineController:
             if self.bot.leapfrog_mines:
                 attack_mines = self.bot.mines_burrowed.closer_than(
                     self.bot.defence_radius, self.bot.enemy_start_location).filter(
-                    lambda x: x.buff_duration_remain <= 0)
+                    lambda x: x.buff_duration_remain <= 0 and not targets.closer_than(10, mine))
                 avg_dist = self.bot.defence_radius
                 if attack_mines:
                     avg_dist = attack_mines.furthest_to(self.bot.enemy_start_location)\
@@ -206,6 +204,6 @@ class MineController:
             if mine.distance_to(self.bot.homeBase) <= 10:
                 self.bot.do(mine(AbilityId.BURROWUP_WIDOWMINE))
                 break
-            if (not mines_ready or self.bot.mines_burrowed.amount > 20) and self.bot.iteraatio % 6 == 0:
+            if (not mines_ready or self.bot.mines_burrowed.amount > 15) and self.bot.iteraatio % 6 == 0:
                 self.bot.do(mine(AbilityId.BURROWUP_WIDOWMINE))
                 break
