@@ -48,7 +48,7 @@ class MarineController:
             print(counter, "marines added to hit squad.")
 
         if self.enemy_units_and_structures and not self.careful_marines:
-            if self.we_are_winning() or self.supply_used > 180 or self.agressive_marines:
+            if self.we_are_winning() or self.supply_used > 180:
                 charge = True
         # if valid_enemies:
         #     threat_to_home = valid_enemies.closest_to(self.start_location)
@@ -62,7 +62,7 @@ class MarineController:
         else:
             marine_scan = False
 
-        marines_reloading = self.basic_marines.filter(lambda x: x.weapon_cooldown != 0).amount
+        marines_reloading = self.basic_marines.filter(lambda x: x.weapon_cooldown > 4).amount
         if marine_scan:
             scanners = self.orbitalcommand.filter(lambda x: x.energy > 50)
             if scanners:
@@ -121,15 +121,15 @@ class MarineController:
 
             "don't abandon siegetank during encounter"
             if siegetanks_need_protection.closer_than(15, marine) \
-                    and not self.siege_behind_wall and not self.agressive_marines:
+                    and not self.siege_behind_wall:
                 closest_siege = siegetanks_need_protection.closest_to(marine)
                 if marine.distance_to(closest_siege) > 5:
                     self.do(marine.move(closest_siege.position))
                 continue
 
             if marine.weapon_cooldown != 0 \
-                    and ((marine_targets.closer_than(17, marine).amount > 2 and can_stim) or self.agressive_marines):
-                if ((marine.health_percentage >= 1 or self.agressive_marines)
+                    and ((marine_targets.closer_than(17, marine).amount > 2 and can_stim)):
+                if ((marine.health_percentage >= 1)
                         and self.ccANDoc.amount >= 2
                         and await self.can_cast(marine, AbilityId.EFFECT_STIM_MARINE)
                         and not marine.has_buff(BuffId.STIMPACK)):
@@ -145,20 +145,14 @@ class MarineController:
                 continue
             if await self.avoid_own_nuke(marine):
                 continue
-            if not self.agressive_marines and await self.avoid_enemy_siegetanks(marine):
+            if await self.avoid_enemy_siegetanks(marine):
                 continue
 
-            # if (self.enemy_units_on_ground.closer_than(marine.ground_range - 1, marine)
-            #         and marine.weapon_cooldown != 0
-            #         and not self.agressive_marines):
-            #     self.do(marine.move(self.homeBase.position.towards(self.enemy_units.closest_to(marine), -10)))
-            #     continue
 
             # if marine_targets and self.careful_marines and marines_reloading >= 8 and marine.weapon_cooldown != 0:
             #     self.do(marine.move(marine.position.towards(marine_targets.closest_to(marine), -10)))
             #     continue
             if (marine.weapon_cooldown != 0
-                    and not self.agressive_marines
                     and units_to_fear.closer_than(marine.ground_range + marine.radius, marine)):
                 self.do(marine.move(marine.position.towards(units_to_fear.closest_to(marine), -10)))
                 continue
@@ -166,8 +160,7 @@ class MarineController:
             # retreat if low health
             if (marine.health_percentage < 1 / 2
                     and self.medivacs
-                    and self.supply_used < 180
-                    and not self.agressive_marines):
+                    and self.supply_used < 180):
                 if marine.distance_to(self.homeBase) > 15:
                     self.do(marine.attack(self.homeBase.position))
                     continue

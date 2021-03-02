@@ -29,16 +29,16 @@ class MineController:
                 max_mines_for_influence -= 1
             self.mine_grid = self.bot.map_data.add_cost(
                 position=mine.position, radius=6, grid=self.mine_grid, weight=50)
-        for unit in self.bot.mines.filter(lambda x: x.tag not in self.bot.remembered_fired_mines_by_tag):
-            if len(unit.orders) < 2:
-                continue
-            for order in unit.orders:
-                if isinstance(order.target, int):
-                    continue
-                target = order.target
-                point = Point2.from_proto(target)
-                self.mine_grid = self.bot.map_data.add_cost(
-                    position=point, radius=3, grid=self.mine_grid, weight=10)
+        # for unit in self.bot.mines.filter(lambda x: x.tag not in self.bot.remembered_fired_mines_by_tag):
+        #     if len(unit.orders) < 2:
+        #         continue
+        #     for order in unit.orders:
+        #         if isinstance(order.target, int):
+        #             continue
+        #         target = order.target
+        #         point = Point2.from_proto(target)
+        #         self.mine_grid = self.bot.map_data.add_cost(
+        #             position=point, radius=3, grid=self.mine_grid, weight=10)
 
         for unit in self.bot.enemy_units.of_type(UnitTypeId.SIEGETANKSIEGED):
             self.mine_grid = self.bot.map_data.add_cost(
@@ -139,7 +139,7 @@ class MineController:
                     steps_left = 8
                     if path:
                         for point in path:
-                            if point.distance_to(self.bot.enemy_start_location) > avg_dist + 7:
+                            if point.distance_to(self.bot.enemy_start_location) > avg_dist:
                                 continue
                             if steps_left > 0:
                                 if not queue:
@@ -204,6 +204,6 @@ class MineController:
             if mine.distance_to(self.bot.homeBase) <= 10:
                 self.bot.do(mine(AbilityId.BURROWUP_WIDOWMINE))
                 break
-            if (not mines_ready or self.bot.mines_burrowed.amount > 15) and self.bot.iteraatio % 6 == 0:
+            if (not mines_ready or self.bot.mines_burrowed.amount > 10) and self.bot.iteraatio % 10 == 0:
                 self.bot.do(mine(AbilityId.BURROWUP_WIDOWMINE))
                 break

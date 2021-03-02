@@ -104,7 +104,6 @@ class ANIbot(ANI_base_bot):
     maxmarauder = 6
     assault_enemy_home = True
     careful_marines = False
-    agressive_marines = False
     marauder_push_limit = 0
     build_missile_turrets = True
     mineral_field_turret = False
@@ -734,6 +733,12 @@ class ANIbot(ANI_base_bot):
                     if (building.health_percentage < 1
                             and await self.has_ability(AbilityId.CANCEL_BUILDINPROGRESS, building)
                             and not await self.has_ability(AbilityId.HALT_BUILDING, building)):
+                        if building.distance_to(self.natural) < 2:
+                            self.do(building(AbilityId.CANCEL_BUILDINPROGRESS))
+                            self.build_cc_home = True
+                            if self.chat:
+                                await self._client.chat_send("You got my natural. Thats bad.", team_only=False)
+                            continue
                         if building.health_percentage < 1 / 6:
                             self.do(building(AbilityId.CANCEL_BUILDINPROGRESS))
                             print("Building cancelled")
@@ -802,7 +807,7 @@ class ANIbot(ANI_base_bot):
             ajoneuvot = repailable_units.ready.closer_than(15, self.homeBase)
             rakennukset = self.structures.ready.exclude_type([TECHLAB, REACTOR])
             potilaat = (ajoneuvot | rakennukset).filter(lambda x: x.health_percentage < 1)
-            if self.marines.amount == 1 and self.enemy_units.of_type(UnitTypeId.ZEALOT):
+            if self.marines.amount == 1 and self.enemy_units.of_type(UnitTypeId.ZEALOT) and self.time < 180:
                 target = self.enemy_units.of_type(UnitTypeId.ZEALOT).closest_to(self.marines.first)
                 for fixer in self.repair_group:
                     self.do(fixer.attack(target))
@@ -1351,13 +1356,13 @@ class ANIbot(ANI_base_bot):
             9 = test
             10 = No starport
             11 = Marauders
-            12 = 1-1-1 slow expand
+            12 = 1-1-1 opener
             13 = Minefields
             14 = MCV
             15 = cc first
             """
 
-            self.strategy = 1  # 2021
+            self.strategy = 12  # 2021
             # self.strategy = random.choice([13])
             # self.strategy = random.randint(1, 15)
 
@@ -1376,18 +1381,6 @@ class ANIbot(ANI_base_bot):
             # if self.opp_id == "d4f4776b-f4dd-4cdc-bb29-18f28c016c66":  # MicroMachine
             #     print("Opponent: MicroMachine")
             #     self.strategy = 9 # Fast cyclone
-            #     self._training_data.removeResult(self.opp_id)
-            # if self.opp_id == "54bca4a3-7539-4364-b84b-e918784b488a":  # Jensiiibot
-            #     print("Opponent: Jensiiibot")
-            #     self.strategy = 5 # Air superiority
-            #     self._training_data.removeResult(self.opp_id)
-            # if self.opp_id == "6ddf718d-07ec-4c41-9ee8-14c469533ffb":  # Ketroc
-            #     print("Opponent: Ketroc")
-            #     self.strategy = 8 # marine drop
-            #     self._training_data.removeResult(self.opp_id)
-            # if self.opp_id == "da677994-8e56-4fb8-ac89-19c2e870d3f5":  # TheHarvester
-            #     print("Opponent: TheHarvester")
-            #     self.strategy = 3
             #     self._training_data.removeResult(self.opp_id)
 
             # 2021
@@ -1414,6 +1407,7 @@ class ANIbot(ANI_base_bot):
                 self.maxmarauder = 2
                 self.MaxGhost = 0
                 self.expand_for_vespene = True
+                self.expand_fast_for_vespene = True
                 self.mines_left = 2
                 self.cyclone_left = 5
                 self.banshee_left = 0
@@ -1433,7 +1427,6 @@ class ANIbot(ANI_base_bot):
                 self.maxmedivacs = 3
                 self.min_marine = 20  # try keep this amount of marines
                 self.max_marine = 120
-                self.agressive_marines = False
                 self.careful_marines = False
                 self.agressive_tanks = False
                 self.research_stimpack = True
@@ -1531,7 +1524,6 @@ class ANIbot(ANI_base_bot):
                     self.build_starportreactor = 0
                 self.build_missile_turrets = False
                 self.mineral_field_turret = False
-                self.agressive_marines = False
                 self.scv_build_speed = 3
                 self.more_depots = True
                 self.first_base_saturation = 0
@@ -1579,7 +1571,8 @@ class ANIbot(ANI_base_bot):
                 self.delay_expansion = False
                 self.delay_third = False
                 self.first_base_saturation = 0
-                self.refineries_in_first_base = 2
+                self.refineries_in_first_base = 1
+                self.refineries_in_second_base = 4
                 self.fast_vespene = True
                 self.scv_limit = 80
                 self.minimum_repairgroup = 2
@@ -1599,8 +1592,13 @@ class ANIbot(ANI_base_bot):
                 self.marines_last_resort = True
                 self.maxmarauder = 0
                 self.MaxGhost = 0
-                self.hellion_left = 100
-                self.morph_to_hellbats = True
+                self.hellion_left = 1000
+                if self.enemy_race == Race.Terran:
+                    self.morph_to_hellbats = False
+                    self.agressive_tanks = False
+                else:
+                    self.morph_to_hellbats = True
+                    self.agressive_tanks = True
                 self.research_blue_flame = True
                 self.upgrade_marine = False
                 self.research_stimpack = False
@@ -1608,26 +1606,25 @@ class ANIbot(ANI_base_bot):
                 self.build_barracks_addons = False
                 self.barracks_reactor_first = True
                 self.delay_barracs = False
-                self.maxfactory = 4
+                self.maxfactory = 3
                 self.priority_factoty_reactor = False
                 self.max_starports = 1
                 self.build_starportreactor = 1
                 self.careful_marines = False
                 self.banshee_left = 0
-                self.max_viking = 3  # build this amount of vikings before enemy air unts have been seen
-                self.liberator_left = 2
+                self.max_viking = 1  # build this amount of vikings before enemy air unts have been seen
+                self.liberator_left = 0
                 self.upgrade_liberator = False
                 self.raven_left = 0
                 self.maxmedivacs = 1
-                self.mines_left = 2
+                self.mines_left = 0
                 self.activate_all_mines = True
-                self.max_siege = 8
-                self.faster_tanks = True
-                self.agressive_tanks = True
-                self.cyclone_left = 10
+                self.max_siege = 4
+                self.faster_tanks = False
+                self.cyclone_left = 3
                 self.max_thor = 100
                 self.flanking_thors = True
-                self.min_thors_to_attack = 1
+                self.min_thors_to_attack = 2
                 self.max_BC = 0
                 self.build_extra_factories = True
                 self.build_extra_starports = False
@@ -1816,18 +1813,18 @@ class ANIbot(ANI_base_bot):
                 self.first_base_saturation = 4
                 self.refineries_in_first_base = 2
                 self.refineries_in_second_base = 4
-                self.greedy_third = True
+                self.greedy_third = False
                 self.delay_third = False
                 self.supply_limit_for_third = 100
                 self.fast_vespene = True
-                self.build_priority_cyclone = True
+                self.build_priority_cyclone = False
                 self.raven_left = 100
                 self.barracks_reactor_first = False
                 self.delay_barracs = True
-                self.max_barracks = 3
+                self.max_barracks = 2
                 self.super_fast_barracks = False
                 self.maxfactory = 1
-                self.max_starports = 1
+                self.max_starports = 2
                 self.build_starportreactor = 1
                 self.min_marine = 4  # try keep this amount of marines
                 self.max_marine = 100
@@ -1850,7 +1847,7 @@ class ANIbot(ANI_base_bot):
                 self.upgrade_banshee_cloak = False
                 self.upgrade_banshee_speed = False
                 self.max_viking = 0  # build this amount of vikings before enemy air unts have been seen
-                self.liberator_left = 10
+                self.liberator_left = 100
                 self.upgrade_liberator = True
                 self.maxmedivacs = 1
                 self.BuildReapers = False
@@ -1861,6 +1858,8 @@ class ANIbot(ANI_base_bot):
                 self.max_siege = 0
                 self.priority_tank = False
                 self.siege_behind_wall = False
+                self.build_extra_factories = True
+                self.build_extra_starports = True
             elif self.strategy == 10:  # No starport
                 self.first_base_saturation = 0
                 self.bunker_in_natural = 1
@@ -1908,7 +1907,6 @@ class ANIbot(ANI_base_bot):
                 self.maxmarauder = 10
                 self.assault_enemy_home = True
                 self.careful_marines = False
-                self.agressive_marines = False
                 self.build_missile_turrets = False
                 self.mineral_field_turret = False
                 self.mech_build = False
@@ -2011,7 +2009,7 @@ class ANIbot(ANI_base_bot):
                 self.siege_behind_wall = False
                 self.build_extra_factories = False
                 self.build_extra_starports = True
-            elif self.strategy == 12:  # 1-1-1 slow expand
+            elif self.strategy == 12:  # 1-1-1 opener
                 self.marauder_push_limit = 0
                 self.build_cc_home = False
                 self.delay_expansion = False
@@ -2065,7 +2063,7 @@ class ANIbot(ANI_base_bot):
                 self.fast_engineeringbay = False
                 self.maxmarauder = 0
                 self.build_barracks_reactors = True
-                self.assault_enemy_home = True
+                self.assault_enemy_home = False
                 self.careful_marines = False
                 self.build_missile_turrets = False
                 self.mineral_field_turret = True
@@ -2279,7 +2277,7 @@ class ANIbot(ANI_base_bot):
 
         if self.iteraatio == 25 and self.chat:
             # await self._client.chat_send("InsANIty. Friends call me ANI. 15.2.2021", team_only=False)
-            await self._client.chat_send("ANI 20.2.2021. GLHF.", team_only=False)
+            await self._client.chat_send("ANI 25.2.2021. GLHF.", team_only=False)
         if self.iteraatio == 50:
             if self.strategy == 1:
                 if self.chat:
@@ -2327,8 +2325,8 @@ class ANIbot(ANI_base_bot):
                 print("Strat: Marauders")
             elif self.strategy == 12:
                 if self.chat:
-                    await self._client.chat_send("Strategy: 1-1-1 slow expand", team_only=False)
-                print("Strat: 1-1-1 slow expand")
+                    await self._client.chat_send("Strategy: 1-1-1 opener", team_only=False)
+                print("Strat: 1-1-1 opener")
             elif self.strategy == 13:
                 if self.chat:
                     await self._client.chat_send("Strategy: Minefields", team_only=False)
@@ -2493,7 +2491,7 @@ class ANIbot(ANI_base_bot):
                 if self.chat:
                     await self._client.chat_send("Take your buildings to your own base! Ok?", team_only=False)
                 return False
-            if self.ccANDoc.amount > 5:
+            if self.ccANDoc.amount > 2:
                 self.super_greed = False
             if self.barracks:
                 if self.already_pending(UnitTypeId.COMMANDCENTER) and self.minerals < 400:
@@ -3216,8 +3214,8 @@ class ANIbot(ANI_base_bot):
             self.marine_drop = False
             return True
         waypoint = await self.get_waypoint_for_dropship()
-        drop_point = self.mineral_field.closer_than(10.0, self.enemy_start_location).center
-        drop_point = drop_point.position.towards(self.enemy_start_location, -1)
+        fields = self.mineral_field.closer_than(10.0, self.enemy_start_location)
+        drop_point = fields.furthest_to(self.enemy_natural)
 
         if self.supply_used >= 13 and not self.barracks.ready and self.already_pending(BARRACKS):
             return False
@@ -3306,7 +3304,7 @@ class ANIbot(ANI_base_bot):
                 self.dropship_sent = False
             for medivac in self.medivacs:
                 if self.enemy_structures.of_type([UnitTypeId.MISSILETURRET, UnitTypeId.SPORECRAWLER])\
-                        .closer_than(15, medivac):
+                        .closer_than(15, medivac) or medivac.did_take_first_hit:
                     abilities = (await self.get_available_abilities(medivac))
                     if AbilityId.UNLOADALLAT_MEDIVAC in abilities:
                         self.do(medivac(AbilityId.UNLOADALLAT_MEDIVAC, medivac.position))
@@ -3683,7 +3681,7 @@ class ANIbot(ANI_base_bot):
                 self.do(scv.attack(scout))
                 self.kill_scout = False
 
-        if targets and scvs and self.can_do_worker_rush_defence:
+        if targets and scvs and self.can_do_worker_rush_defence and self.time < 180:
             mf = self.mineral_field.closest_to(self.homeBase)
             enemy_mf = self.mineral_field.closest_to(self.enemy_start_location)
             targets_near_home = targets.closer_than(25, self.start_location)
@@ -3948,6 +3946,8 @@ class ANIbot(ANI_base_bot):
             if self.min_thors_to_attack < 10:
                 self.min_thors_to_attack += 1
             if self.flanking_thors:
+                if self.thors.closer_than(10, self.enemy_start_location):
+                    self.flanking_thors = False
                 for thor in idle_thors:
                     if self.thor_use_route_a:
                         self.thor_use_route_a = False
@@ -3965,10 +3965,10 @@ class ANIbot(ANI_base_bot):
                             self.do(thor.attack(point, queue=True))
                         self.do(thor.attack(self.enemy_natural, queue=True))
                         self.do(thor.attack(self.enemy_start_location, queue=True))
-                    if self.enemy_structures:
-                        target_of_assault = random.choice(self.enemy_structures)
-                        self.do(thor.attack(target_of_assault.position, queue=True))
-                        continue  # continue for loop, dont execute any of the following
+                    # if self.enemy_structures:
+                    #     target_of_assault = random.choice(self.enemy_structures)
+                    #     self.do(thor.attack(target_of_assault.position, queue=True))
+                    #     continue  # continue for loop, dont execute any of the following
 
                 return
             elif self.enemy_structures.exists:
@@ -4136,10 +4136,9 @@ class ANIbot(ANI_base_bot):
         primary_targets = enemy_threats.filter(lambda x: x.is_light)
         outpost = await self.get_outpost()
         for hellion in hellions.sorted(lambda x: x.health_percentage, reverse=False):
-            if (self.hellions.amount > 10 or self.morph_to_hellbats) and await self.has_ability(
-                    AbilityId.MORPH_HELLBAT, hellion) and self.iteraatio % 5 == 0:
+            if self.morph_to_hellbats and await self.has_ability(AbilityId.MORPH_HELLBAT, hellion):
                 self.do(hellion(AbilityId.MORPH_HELLBAT))
-                break
+                continue
             # if hellion.health_percentage < 0.5 and hellion.distance_to(self.homeBase) > 10 and not self.marine_drop:
             #     self.do(hellion.move(self.homeBase.position))
             #     continue
@@ -4261,7 +4260,7 @@ class ANIbot(ANI_base_bot):
                 continue
             # if await self.avoid_enemy_siegetanks(tank):
             #     continue
-            if tank.health_percentage < 0.5 and tank.weapon_cooldown == 0:
+            if tank.health_percentage < 0.5 and tank.weapon_cooldown < 4:
                 if tank.distance_to(self.homeBase) > 15:
                     self.do(tank.attack(self.homeBase.position))
                     continue
@@ -4394,10 +4393,6 @@ class ANIbot(ANI_base_bot):
             delay_assault = True
         if bcs_ready_for_jump > self.max_BC:
             bcs_ready_for_jump = self.max_BC
-
-        if assault_target == self.enemy_start_location:
-            waypoints_after_jump = sorted(self.expansion_locations_list,
-                                          key=lambda p: p.distance_to(self.enemy_start_location), reverse=False)
 
         for battle_ruiser in bcs:
             if perform_assault and battle_ruiser.jump_ready and bcs_ready_for_jump > 0 and assault_target:
@@ -4590,10 +4585,7 @@ class ANIbot(ANI_base_bot):
             limit_for_attack = 2
         else:
             limit_for_attack = 1
-        if self.agressive_marines:
-            limit_for_agression = 190
-        else:
-            limit_for_agression = 190
+        limit_for_agression = 190
         if ((self.supply_used > limit_for_agression or nuke_ready) and not self.target_of_assault
                 and not self.thors):
             if self.enemy_structures and not self.enemy_structures.visible:
@@ -4628,7 +4620,7 @@ class ANIbot(ANI_base_bot):
         for marauder in self.marauders:
             if await self.avoid_own_nuke(marauder):
                 continue
-            if not self.agressive_marines and await self.avoid_enemy_siegetanks(marauder):
+            if await self.avoid_enemy_siegetanks(marauder):
                 continue
             if self.ccANDoc.amount == 1 \
                     and self.enemy_structures.of_type(UnitTypeId.PLANETARYFORTRESS).closer_than(20, marauder):
@@ -4638,7 +4630,7 @@ class ANIbot(ANI_base_bot):
                 return
             "don't abandon siege tanks during encounter"
             if siegetanks_need_protection.closer_than(15, marauder) \
-                    and not self.siege_behind_wall and not self.agressive_marines:
+                    and not self.siege_behind_wall:
                 closest_siege = siegetanks_need_protection.closest_to(marauder)
                 if marauder.distance_to(closest_siege) > 5:
                     self.do(marauder.move(closest_siege.position))
@@ -4960,12 +4952,17 @@ class ANIbot(ANI_base_bot):
                             self.do(oc(AbilityId.CALLDOWNMULE_CALLDOWNMULE, mf))
 
     async def evac_orbital(self):
-        for cc in (self.orbitalcommand.ready.idle | self.cc.ready.idle):
-            if not self.townhalls_flying and cc.health_percentage < 0.9 and self.enemy_units.closer_than(10,
-                                                                                                         cc):
+        for cc in (self.orbitalcommand.ready | self.cc.ready):
+            if ((not self.townhalls_flying and cc.health_percentage < 0.9) or cc.health_percentage < 0.3) \
+                    and self.enemy_units.closer_than(15, cc):
                 if len(cc.orders) == 0:
+                    for scv in self.scvs.closer_than(10, cc):
+                        self.do(scv.move(scv.position, queue=False))
                     self.do(cc(AbilityId.LIFT, queue=True))
                     self.lift_cc_once = False
+                    continue
+                else:
+                    self.do(cc(AbilityId.CANCEL_QUEUE5))
                     continue
         for cc in self.orbitalcommand.ready.idle:
             if not self.super_greed:
@@ -5192,8 +5189,6 @@ class ANIbot(ANI_base_bot):
             return
         # if self.super_greed:
         #     return
-        if self.mech_build and self.ccANDoc.amount == 2 and self.refineries.amount >= 2:
-            return
         if not self.expand_for_vespene and self.already_pending(UnitTypeId.REFINERY):
             return
         elif self.barracks or (self.fast_vespene and self.supplydepots):
@@ -5414,7 +5409,7 @@ class ANIbot(ANI_base_bot):
                             and not self.delay_expansion
                             and self.factories.ready
                             and ((self.fast_armory and self.ccANDoc.ready.amount >= 2) or self.ccANDoc.ready.amount >= 3)):
-                        if self.can_afford(UnitTypeId.ARMORY) and self.factories.ready.exists:
+                        if self.can_afford(UnitTypeId.ARMORY):
                             await self.build_for_me(UnitTypeId.ARMORY)
                             return
 
@@ -5560,7 +5555,7 @@ class ANIbot(ANI_base_bot):
                     self.do(facility(AbilityId.RESEARCH_COMBATSHIELD))
                 return False
         if (self.refineries.ready.amount >= 2 and self.research_stimpack and not self.build_priority_cyclone
-                and (self.medivacs or self.already_pending(UnitTypeId.MEDIVAC) or self.agressive_marines)):
+                and (self.medivacs or self.already_pending(UnitTypeId.MEDIVAC))):
             if not self.already_pending(STIMPACK):
                 for facility in self.structures(BARRACKSTECHLAB).ready.idle:
                     if self.can_afford(BARRACKSTECHLABRESEARCH_STIMPACK):

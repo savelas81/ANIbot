@@ -251,7 +251,7 @@ class UnitTrainer:
             if self.bot.mines_left > 0:
                 if self.bot.hellion_left > 0 and self.bot.minerals > self.bot.vespene \
                         and self.bot.already_pending(UnitTypeId.WIDOWMINE) \
-                        and not self.bot.already_pending(UnitTypeId.HELLION) and hellion_total < 16:
+                        and not self.bot.already_pending(UnitTypeId.HELLION) and hellion_total < 10:
                     if self.bot.can_afford(UnitTypeId.HELLION):
                         self.bot.do(factory.train(UnitTypeId.HELLION))
                         print("Training hellion")
@@ -261,7 +261,7 @@ class UnitTrainer:
                     print("Training mine")
                     return
             elif self.bot.hellion_left > 0:
-                if self.bot.minerals > self.bot.vespene and hellion_total < 16 \
+                if self.bot.minerals > self.bot.vespene and hellion_total < 12 \
                         and (self.bot.supply_used < 190 or self.bot.thors) \
                         and self.bot.can_feed(UnitTypeId.HELLION):
                     self.bot.do(factory.train(UnitTypeId.HELLION))
