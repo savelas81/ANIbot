@@ -24,10 +24,13 @@ class FlankingController:
             self.attack_route_a_temp = copy.copy(self.bot.attack_route_a)
         if not self.group_1_target and self.bot.flank_group_1 and self.attack_route_a_temp:
             self.group_1_target = self.attack_route_a_temp.pop()
+            self.group_1_target = self.group_1_target.towards(self.bot.game_info.map_center, -4)
         if self.bot.flank_group_1 and self.group_1_target:
-            if self.bot.flank_group_1.center.distance_to(self.group_1_target) < 4:
+            if self.bot.flank_group_1.center.distance_to(self.group_1_target) < 2 \
+                    or self.bot.structures().closer_than(5, self.group_1_target):
                 if self.attack_route_a_temp:
                     self.group_1_target = self.attack_route_a_temp.pop()
+                    self.group_1_target = self.group_1_target.towards(self.bot.game_info.map_center, -4)
                 else:
                     self.group_1_target = None
                     self.bot.clear_units_in_flank_1()
@@ -38,10 +41,10 @@ class FlankingController:
                                 and not unit.has_buff(BuffId.STIMPACK):
                             self.bot.do(unit(AbilityId.EFFECT_STIM_MARINE))
                             continue  # continue for loop, dont execute any of the following
-                    if self.bot.iteraatio % 3 == 0:
-                        self.bot.do(unit.attack(self.group_1_target.towards(unit, -5)))
+                    if self.bot.iteraatio % 4 == 0:
+                        self.bot.do(unit.move(self.group_1_target))
                     else:
-                        self.bot.do(unit.move(self.group_1_target.towards(unit, -5)))
+                        self.bot.do(unit.attack(self.group_1_target))
 
         if self.group_2_target and not self.bot.flank_group_2:
             self.group_2_target = None
@@ -50,10 +53,13 @@ class FlankingController:
             self.attack_route_b_temp = copy.copy(self.bot.attack_route_b)
         if not self.group_2_target and self.bot.flank_group_2 and self.attack_route_b_temp:
             self.group_2_target = self.attack_route_b_temp.pop()
+            self.group_2_target = self.group_2_target.towards(self.bot.game_info.map_center, -4)
         if self.bot.flank_group_2 and self.group_2_target:
-            if self.bot.flank_group_2.center.distance_to(self.group_2_target) < 4:
+            if self.bot.flank_group_2.center.distance_to(self.group_2_target) < 2 \
+                    or self.bot.structures().closer_than(5, self.group_2_target):
                 if self.attack_route_b_temp:
                     self.group_2_target = self.attack_route_b_temp.pop()
+                    self.group_2_target = self.group_2_target.towards(self.bot.game_info.map_center, -4)
                 else:
                     self.group_2_target = None
                     self.bot.clear_units_in_flank_2()
@@ -64,10 +70,10 @@ class FlankingController:
                                 and not unit.has_buff(BuffId.STIMPACK):
                             self.bot.do(unit(AbilityId.EFFECT_STIM_MARINE))
                             continue  # continue for loop, dont execute any of the following
-                    if self.bot.iteraatio % 3 == 0:
-                        self.bot.do(unit.attack(self.group_2_target.towards(unit, -5)))
+                    if self.bot.iteraatio % 4 == 0:
+                        self.bot.do(unit.move(self.group_2_target))
                     else:
-                        self.bot.do(unit.move(self.group_2_target.towards(unit, -5)))
+                        self.bot.do(unit.attack(self.group_2_target))
 
 
 

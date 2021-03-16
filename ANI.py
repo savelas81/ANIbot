@@ -1362,7 +1362,7 @@ class ANIbot(ANI_base_bot):
             15 = cc first
             """
 
-            self.strategy = 12  # 2021
+            self.strategy = 3  # 2021
             # self.strategy = random.choice([13])
             # self.strategy = random.randint(1, 15)
 
@@ -1497,27 +1497,33 @@ class ANIbot(ANI_base_bot):
                 self.build_extra_starports = True
             elif self.strategy == 3:  # Terran Bio
                 # self.priority_raven = True
-                self.send_flanking_units = 10
+                self.send_flanking_units = 100
                 if self.enemy_race == Race.Protoss:
-                    self.min_marine = 30
-                    self.maxmarauder = 8
+                    self.min_marine = 40
+                    self.maxmarauder = 4
+                    self.hellion_left = 0
                     self.max_siege = 2
+                    self.dual_liberator = True
                     self.liberator_left = 0
                     self.upgrade_liberator = False
                     self.max_viking = 2
                     self.build_starportreactor = 0
                 elif self.enemy_race == Race.Terran:
-                    self.min_marine = 30
-                    self.maxmarauder = 4
-                    self.max_siege = 6
+                    self.min_marine = 40
+                    self.maxmarauder = 0
+                    self.hellion_left = 1
+                    self.max_siege = 4
+                    self.dual_liberator = True
                     self.liberator_left = 6
                     self.upgrade_liberator = False
                     self.max_viking = 2
                     self.build_starportreactor = 1
                 else:
-                    self.min_marine = 30
+                    self.min_marine = 40
                     self.maxmarauder = 4
-                    self.max_siege = 6
+                    self.hellion_left = 2
+                    self.max_siege = 2
+                    self.dual_liberator = True
                     self.liberator_left = 0
                     self.upgrade_liberator = False
                     self.max_viking = 1
@@ -1526,29 +1532,29 @@ class ANIbot(ANI_base_bot):
                 self.mineral_field_turret = False
                 self.scv_build_speed = 3
                 self.more_depots = True
-                self.first_base_saturation = 0
+                self.first_base_saturation = 4
                 self.delay_expansion = True
                 self.delay_third = True
                 self.supply_limit_for_third = 75
                 self.fast_orbital = False
                 self.refineries_in_first_base = 1
-                self.refineries_in_second_base = 2
+                self.refineries_in_second_base = 1
                 self.fast_vespene = False
                 self.limit_vespene = 4
                 self.expand_for_vespene = False
                 self.priority_tank = False
                 self.mines_left = 0
                 self.upgrade_mech = False
-                self.scv_limit = 75
+                self.scv_limit = 80
                 self.send_scout = False
                 self.greedy_scv_consrtuction = False
-                self.cyclone_left = 0
+                self.cyclone_left = 2
                 self.max_barracks = 4
                 self.super_fast_barracks = True
                 self.delay_barracs = False
                 self.MaxGhost = 0
                 self.maxfactory = 1
-                self.max_starports = 2
+                self.max_starports = 1
                 self.barracks_reactor_first = False
                 self.BuildReapers = False
                 self.max_marine = 100
@@ -2277,7 +2283,7 @@ class ANIbot(ANI_base_bot):
 
         if self.iteraatio == 25 and self.chat:
             # await self._client.chat_send("InsANIty. Friends call me ANI. 15.2.2021", team_only=False)
-            await self._client.chat_send("ANI 25.2.2021. GLHF.", team_only=False)
+            await self._client.chat_send("Artificial No Intelligence 16.3.2021. GLHF.", team_only=False)
         if self.iteraatio == 50:
             if self.strategy == 1:
                 if self.chat:
@@ -4611,9 +4617,11 @@ class ANIbot(ANI_base_bot):
             CC_under_construction = False
         siegetanks_need_protection = self.siegetanks_sieged.filter(
             lambda x: not self.enemy_units_on_ground.closer_than(14, x))
-        if self.enemy_units.of_type(UnitTypeId.SIEGETANKSIEGED):
+        if self.enemy_units.of_type(UnitTypeId.SIEGETANKSIEGED) and not self.delay_third and self.kamikaze_target:
             self.kamikaze_target = None
             self.clear_units_in_kamikaze_troops()
+            if self.chat:
+                await self._client.chat_send("Scap those siegetanks!.", team_only=False)
             return
         if not self.marauders.filter(lambda x: x.is_in_kamikaze_troops):
             self.kamikaze_target = None
@@ -4962,7 +4970,7 @@ class ANIbot(ANI_base_bot):
                     self.lift_cc_once = False
                     continue
                 else:
-                    self.do(cc(AbilityId.CANCEL_QUEUE5))
+                    self.do(cc(AbilityId.CANCEL_QUEUE1))
                     continue
         for cc in self.orbitalcommand.ready.idle:
             if not self.super_greed:

@@ -22,9 +22,8 @@ class MarineController:
         #     marine_targets = valid_enemies.filter(lambda x: x.distance_to(self.siegetanks_sieged.closest_to(x)) < 14)
 
         if self.send_flanking_units > 0 and not self.delay_expansion and not self.delay_third \
-                and not self.marauders.filter(lambda x: x.is_in_kamikaze_troops) and not self.flank_group_1 \
-                and not self.flank_group_2:
-            if self.basic_marines.amount > 10:
+                and not self.marauders.filter(lambda x: x.is_in_kamikaze_troops):
+            if self.basic_marines.amount > 20:
                 if not self.flank_group_1 and self.create_flanking_group_1:
                     self.create_flanking_group_1 = False
                     self.send_flanking_units -= 1
