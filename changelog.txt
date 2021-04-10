@@ -94,3 +94,7 @@
 28.11.2020 Build order improvements
 	Strategies chosen for Probots
 29.11.2020 Higher priority for vikings if tempests are spotted.
+23.3.2021 overlords near base does not prevent scv production nead townhalls
+26.3.2021 Ghost waits until cloack is 75% researched before nukerush.
+	In case of ling rush wall will be built faster and orbital delayed.
+	only flying CC:s crash bug fix

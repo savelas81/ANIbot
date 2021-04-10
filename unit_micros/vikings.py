@@ -91,7 +91,7 @@ class VikingController:
                         self.lowest_health_viking_tag = viking.tag
 
             targets = self.bot.enemy_units_on_air.in_attack_range_of(viking, 0).visible
-            if targets and viking.weapon_cooldown == 0:
+            if targets and viking.weapon_cooldown < 4:
                 target = targets.sorted(lambda x: x.health + x.shield, reverse=False)[0]
                 self.bot.do(viking.attack(target))
                 continue
@@ -101,8 +101,12 @@ class VikingController:
                 pt = priority_targets_this_frame.in_attack_range_of(viking, 2).visible
                 if pt:
                     target = pt.closest_to(viking)
-                    self.bot.do(viking.move(target.position))
-                    continue
+                    if viking.distance_to(target) > viking.air_range:
+                        self.bot.do(viking.move(target.position))
+                        continue
+                    else:
+                        self.bot.do(viking.attack(target.position))
+                        continue
 
             if viking.tag == self.lowest_health_viking_tag or viking.health_percentage < 0.3 \
                     and not enemy_air_units_our_base and self.bot.max_viking > 2:
@@ -250,13 +254,13 @@ class VikingController:
                 continue
 
             if self.bot.enemy_units_on_ground.closer_than(self.bot.defence_radius, self.bot.homeBase):
-                if viking.weapon_cooldown != 0 and viking.health_percentage < 1:
+                if viking.weapon_cooldown > 4 and viking.health_percentage < 1:
                     closest_enemy = self.bot.enemy_units_on_ground.closest_to(viking)
                     self.bot.do(viking.move(viking.position.towards(closest_enemy.position, -10)))
                     continue
                 priority_targets = self.bot.enemy_units_on_ground.\
                     filter(lambda x: x.is_mechanical and
-                                     x.distance_to(viking) < x.radius + x.ground_range + viking.radius)
+                                     x.distance_to(viking) < x.radius + x.ground_range + viking.radius + 1)
                 if priority_targets:
                     target = priority_targets.closest_to(viking)
                     self.bot.do(viking.attack(target))

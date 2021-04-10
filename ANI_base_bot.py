@@ -469,9 +469,10 @@ class ANI_base_bot(SkeletonBot):
             # gather minerals where jobs available
             townhalls_sorted = townhalls.sorted(lambda x: x.distance_to(idle_worker), reverse=False)
             for townhall in townhalls_sorted:
+                units_to_ignore = [UnitTypeId.DRONE, UnitTypeId.SCV, UnitTypeId.PROBE, UnitTypeId.OVERLORD]
                 if (townhall.assigned_harvesters < townhall.ideal_harvesters
                         and not self.enemy_units_and_structures.exclude_type(
-                            [DRONE, SCV, PROBE]).closer_than(10,townhall)):
+                            units_to_ignore).closer_than(10, townhall)):
                     mf = self.mineral_field.closest_to(townhall)
                     if mf.type_id in rich_mineralfield:
                         if idle_worker.distance_to(townhall) > 10:
@@ -539,6 +540,15 @@ class ANI_base_bot(SkeletonBot):
 
     def clear_units_in_flank_2(self):
         self.remember_flank_2_by_tag = {}
+
+    def remove_from_flanking_groups(self, unit):
+        if unit.tag in self.remember_flank_1_by_tag:
+            self.remember_flank_1_by_tag.pop(unit.tag)
+        elif unit.tag in self.remember_flank_2_by_tag:
+            self.remember_flank_2_by_tag.pop(unit.tag)
+        else:
+            print("TAG ERROR: trying to remove unit.tag from self.remembered_kamikaze_troops_by_tag")
+
 
     def add_unit_to_kodinturvajoukot(self, unit):
         # adds units remembered_kodinturvajoukot_by_tag

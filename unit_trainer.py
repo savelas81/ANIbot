@@ -101,6 +101,8 @@ class UnitTrainer:
             minerals_for_marine = 300
         if not self.bot.build_barracks_addons:
             can_build_add_on = False
+        elif self.bot.research_stimpack_rush and self.bot.structures(UnitTypeId.BARRACKSTECHLAB):
+            can_build_add_on = False
         elif self.bot.delay_expansion and self.bot.structures(UnitTypeId.BARRACKSREACTOR).amount > 1:
             can_build_add_on = False
         elif self.bot.super_fast_barracks and pending_addons < 3 and self.bot.vespene > 60 \
@@ -112,12 +114,14 @@ class UnitTrainer:
         else:
             can_build_add_on = True
 
-        if self.bot.can_afford(UnitTypeId.REAPER) and reaper_total < maxreaper \
-                and self.bot.refineries and not self.bot.marine_drop and raxes_all:
-            rax = raxes_all.first
-            self.bot.do(rax.train(UnitTypeId.REAPER))
-            print("Training reaper")
-            return
+        if reaper_total < maxreaper and self.bot.refineries and not self.bot.marine_drop and raxes_all:
+            if self.bot.can_afford(UnitTypeId.REAPER):
+                rax = raxes_all.first
+                self.bot.do(rax.train(UnitTypeId.REAPER))
+                print("Training reaper")
+                return
+            if self.bot.already_pending(UnitTypeId.MARINE) and self.bot.reaper_harass:
+                return
 
         if (self.bot.bunker_in_natural or self.bot.bunkers) and \
                 (self.bot.marines.amount + self.bot.already_pending(UnitTypeId.MARINE)) < 4 and \
@@ -168,7 +172,7 @@ class UnitTrainer:
             self.bot.do(br.train(UnitTypeId.MARAUDER))
             print("Training marauder")
             return
-        if self.bot.minerals > 200 and self.bot.supply_used <= 190 \
+        if self.bot.build_extra_marauders and self.bot.minerals > 200 and self.bot.supply_used <= 190 \
                 and self.bot.can_afford(UnitTypeId.MARAUDER) and raxes_with_techlabs \
                 and marauder_total < 20:
             br = raxes_with_techlabs.first
@@ -380,16 +384,17 @@ class UnitTrainer:
                 elif self.bot.iteraatio % 3 == 0:
                     self.bot.do(starport(AbilityId.LIFT))
                     return
-        # if starports_with_reactors and self.bot.build_starportreactor > 0 and self.bot.max_BC > 0 \
-        #         and self.bot.medivacs.amount >= self.bot.maxmedivacs \
-        #         and self.bot.vikings.amount >= self.bot.max_viking and self.bot.liberator_left <= 0:
-        #     if self.bot.viking_priority and self.bot.banshee_left:
-        #         pass
-        #     else:
-        #         starport = starports_with_reactors.first
-        #         self.bot.do(starport(AbilityId.LIFT))
-        #         self.bot.build_starportreactor = 0
-        #         return
+        if starports_with_reactors and self.bot.build_starportreactor > 0 and self.bot.max_BC > 0 \
+                and self.bot.medivacs.amount >= self.bot.maxmedivacs \
+                and self.bot.vikings.amount >= self.bot.max_viking < 16 and self.bot.liberator_left <= 0 \
+                and not self.bot.react_to_enemy_air:
+            if self.bot.viking_priority and self.bot.banshee_left:
+                pass
+            else:
+                starport = starports_with_reactors.first
+                self.bot.do(starport(AbilityId.LIFT))
+                self.bot.build_starportreactor = 0
+                return
 
         if medi_total < self.bot.maxmedivacs and build_medivacs:
             starport = None

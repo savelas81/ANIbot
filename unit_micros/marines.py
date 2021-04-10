@@ -23,17 +23,18 @@ class MarineController:
 
         if self.send_flanking_units > 0 and not self.delay_expansion and not self.delay_third \
                 and not self.marauders.filter(lambda x: x.is_in_kamikaze_troops):
-            if self.basic_marines.amount > 20:
+            if self.basic_marines.amount > 10:
                 if not self.flank_group_1 and self.create_flanking_group_1:
                     self.create_flanking_group_1 = False
                     self.send_flanking_units -= 1
-                    for unit in self.basic_marines.take(8):
+                    for unit in self.basic_marines.sorted(lambda x: x.distance_to(self.start_location)).take(10):
                         self.add_unit_to_flank_1(unit)
                 elif not self.flank_group_2 and not self.create_flanking_group_1:
                     self.create_flanking_group_1 = True
                     self.send_flanking_units -= 1
-                    for unit in self.basic_marines.take(8):
+                    for unit in self.basic_marines.sorted(lambda x: x.distance_to(self.start_location)).take(10):
                         self.add_unit_to_flank_2(unit)
+                    return
 
         if (self.basic_marines.amount >= 6 and self.squad_group.amount < 3
                 and (self.ccANDoc.ready.amount >= 3
